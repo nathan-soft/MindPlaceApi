@@ -13,7 +13,6 @@ namespace MindPlaceApi.Codes
         public AutoMapperProfile()
         {
             CreateMap<NewUserDto, AppUser>();
-            CreateMap<CreatePatientDto, AppUser>();
             CreateMap<AppUser, AbbrvUser>()
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => $"{src.FirstName} { src.LastName}"));
             CreateMap<AppUser, UserResponseDto>()
@@ -50,6 +49,10 @@ namespace MindPlaceApi.Codes
                 .ForMember(dest => dest.User, opt => opt.Condition(src => src.User != null))
                 .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Comments.Count))
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.QuestionTags.Select(t => t.Tag.Name).ToList()));
+            CreateMap<Question, ForumPostResponseDto>()
+                .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Comments.Count))
+                .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.QuestionTags.Select(t => t.Tag.Name).ToList()))
+                .ForMember(dest => dest.TopComments, opt => opt.MapFrom(src => src.Comments.OrderByDescending(c => c.CreatedOn).Take(10).ToList()));
             CreateMap<CommentDto, Comment>();
             CreateMap<Comment, CommentResponseDto>()
                 .ForMember(dest => dest.User, opt => opt.Condition(src => src.User != null));

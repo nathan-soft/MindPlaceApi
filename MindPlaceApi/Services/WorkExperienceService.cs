@@ -18,7 +18,12 @@ namespace MindPlaceApi.Services
         Task<ServiceResponse<WorkExperienceResponseDto>> AddAsync(WorkExperienceDto workExperience);
         Task<ServiceResponse<WorkExperienceResponseDto>> DeleteWorkExperienceAsync(int workExperienceId);
         Task<ServiceResponse<WorkExperienceResponseDto>> GetByIdAsync(int id);
-        Task<ServiceResponse<List<WorkExperienceResponseDto>>> GetCurrentUserWorkExperiencesAsync();
+        /// <summary>
+        /// Gets the current user work experiences.
+        /// </summary>
+        /// <param name="username">the username of the currently logged in user.</param>
+        /// <returns> A list of the current user work experiences.</returns>
+        Task<ServiceResponse<List<WorkExperienceResponseDto>>> GetUserWorkExperiencesAsync(string username);
         Task<ServiceResponse<WorkExperienceResponseDto>> UpdateAsync(int workExperienceId, WorkExperienceDto workExperience);
     }
 
@@ -39,11 +44,18 @@ namespace MindPlaceApi.Services
             _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<ServiceResponse<List<WorkExperienceResponseDto>>> GetCurrentUserWorkExperiencesAsync()
+        public async Task<ServiceResponse<List<WorkExperienceResponseDto>>> GetUserWorkExperiencesAsync(string username)
         {
             var sr = new ServiceResponse<List<WorkExperienceResponseDto>>();
+            var currUser = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
+
+            if(currUser != username)
+            {
+                return sr.HelperMethod(403, "You're not allowed to read people's work experiences.", false);
+            }
+
             //get user
-            var foundUser = await _userManager.FindByNameAsync(_httpContextAccessor.HttpContext.GetUsernameOfCurrentUser());
+            var foundUser = await _userManager.FindByNameAsync(username);
             if (foundUser == null)
             {
                 //user does not exist.

@@ -25,31 +25,6 @@ namespace MindPlaceApi.Controllers
             _qualificationService = qualificationService;
         }
 
-        [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
-        public async Task<ActionResult<List<QualificationResponseDto>>> FetchUserQualificationsAsync()
-        {
-            try
-            {
-                var response = await _qualificationService.GetCurrentUserQualificationsAsync();
-                if (response.Success)
-                {
-                    //return data.
-                    return Ok(response.Data);
-                }
-                else
-                {
-                    return Problem(response.Message, statusCode: response.Code);
-                }
-            }
-            catch (Exception ex)
-            {
-                //log and return default custom error
-                return Problem(ex.Message, statusCode: 500);
-            }
-        }
-
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

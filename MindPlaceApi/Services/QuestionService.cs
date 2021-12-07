@@ -22,6 +22,7 @@ namespace MindPlaceApi.Services
         Task<ServiceResponse<QuestionResponseDto>> EditQuestionAsync(int questionId, QuestionDto questionDetails);
         Task<ServiceResponse<ForumQuestionResponseDto>> EditForumQuestionAsync(int questionId, ForumQuestionDto questionDetails);
         Task<ServiceResponse<PaginatedResponse<ForumQuestionResponseDto>>> GetForumQuestionsAsync(QuestionFilterParams filterParams);
+        Task<ServiceResponse<ForumPostResponseDto>> GetForumQuestionAsync(int questionId);
         Task<ServiceResponse<ForumQuestionResponseDto>> GetQuestionAsync(int questionId);
         Task<ServiceResponse<List<QuestionResponseDto>>> GetQuestionsAsync();
     }
@@ -167,6 +168,29 @@ namespace MindPlaceApi.Services
             return sr;
         }
 
+        public async Task<ServiceResponse<ForumPostResponseDto>> GetForumQuestionAsync(int questionId)
+        {
+            var sr = new ServiceResponse<ForumPostResponseDto>();
+
+            //get question from db;
+            var question = await _repositoryWrapper.Question.GetForumQuestions()
+                                                      .Where(q => q.Id == questionId)
+                                                      .Include(q => q.User)
+                                                      .Include(q => q.Comments)
+                                                      .Include(q => q.QuestionTags)
+                                                        .ThenInclude(qt => qt.Tag).FirstOrDefaultAsync();
+
+            if (question == null)
+            {
+                return sr.HelperMethod(404, "Unable to load the question.", false);
+            }
+
+            sr.Data = _mapper.Map<ForumPostResponseDto>(question);
+            sr.Code = 200;
+            sr.Success = true;
+            return sr;
+        }
+
         public async Task<ServiceResponse<QuestionResponseDto>> AddQuestionAsync(QuestionDto questionDetails)
         {
             var sr = new ServiceResponse<QuestionResponseDto>();
@@ -213,23 +237,20 @@ namespace MindPlaceApi.Services
             question.Type = QuestionType.FORUM.ToString();
             question.ApprovedBy = "SYSTEM";
 
-            //check if it's not an anonymous question
-            if (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
-            {
-                var username = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
+            
+            var username = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
 
-                var user = await _userManager.FindByNameAsync(username);
-                if (user != null)
-                {
-                    //assign the id of the user.
-                    question.UserId = user.Id;
-                }
-                else
-                {
-                    //error
-                    //A username that doesn't exist was used, let the caller know.
-                    return sr.HelperMethod(400, $"Unable to load user with username '{username}'", false);
-                }
+            var user = await _userManager.FindByNameAsync(username);
+            if (user != null)
+            {
+                //assign the id of the user.
+                question.UserId = user.Id;
+            }
+            else
+            {
+                //error
+                //A username that doesn't exist was used..
+                return sr.HelperMethod(400, $"Unable to load user with username '{username}'", false);
             }
 
             //validate tags

@@ -11,6 +11,7 @@ using MindPlaceApi.Dtos.Response;
 using MindPlaceApi.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -32,6 +33,7 @@ namespace MindPlaceApi.Services
         Task<ServiceResponse<List<UserResponseDto>>> GetNonAdministrativeUsersAsync(string filterString);
         Task<ServiceResponse<UserResponseDto>> GetUserAsync(string username);
         Task<ServiceResponse<List<UserResponseDto>>> GetProfessionalsAsync();
+        Task<ServiceResponse<string>> SendConfirmationTokenAsync(string username);
         //Task<ServiceResponse<string>> SendMailAsync(SendBroadcastMailDto mailInfo);
         Task<ServiceResponse<UserResponseDto>> UpdateUserAsync(string username, EditUserDto userCreds);
         Task<ServiceResponse<List<SubscriptionResponseDto>>> GetUserSubscriptionRequestsAsync(string username);
@@ -68,7 +70,7 @@ namespace MindPlaceApi.Services
             _configuration = configuration;
             //_backgroundJobClient = backgroundJobClient;
         }
-
+        
         public async Task<ServiceResponse<UserResponseDto>> GetUserAsync(string username)
         {
             var sr = new ServiceResponse<UserResponseDto>();
@@ -170,6 +172,12 @@ namespace MindPlaceApi.Services
                 return sr.HelperMethod(409, "email address already exist.", false);
             }
 
+            if (newUser.Email.Contains("mindplace.com"))
+            {
+                //mark email as confirmed for internally created users.
+                newUser.EmailConfirmed = true;
+            }
+
             //create the user.
             newUser.IsActive = true;
             newUser.CreatedOn = DateTime.UtcNow;
@@ -217,6 +225,30 @@ namespace MindPlaceApi.Services
             }
         }
 
+        public async Task<ServiceResponse<string>> SendConfirmationTokenAsync(string username)
+        {
+            var sr = new ServiceResponse<string>();
+            var foundUser = await _userManager.FindByNameAsync(username);
+            if (foundUser == null)
+            {
+                //user does not exist.
+                sr.HelperMethod(404, $"Unable to load user with username '{username}'", false);
+            }
+
+            if (foundUser.EmailConfirmed)
+            {
+                //email already confirmed.
+                sr.HelperMethod(400, $"The email associated with this account has already been confirmed.", false);
+            }
+
+            //get confirmation token
+            string confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(foundUser);
+            string encodedToken = WebUtility.UrlEncode(confirmationToken);
+
+            sr.Data = encodedToken;
+            return sr;
+        }
+
         public async Task<ServiceResponse<string>> ConfirmEmail(EmailConfirmationDto confirmationDetails)
         {
             var sr = new ServiceResponse<string>();
@@ -224,12 +256,17 @@ namespace MindPlaceApi.Services
                                                     .Find(u => u.UserName == confirmationDetails.Username)
                                                     .Include(u => u.Referrals)
                                                         .ThenInclude(ur => ur.Referrer)
-                                                            .ThenInclude(r => r.Wallet)
+                                                        .ThenInclude(r => r.Wallet)
                                                     .FirstOrDefaultAsync();
 
             if (foundUser == null)
             {
                 return sr.HelperMethod(404, $"Unable to load user with username '{confirmationDetails.Username}'", false);
+            }
+
+            if (foundUser.EmailConfirmed)
+            {
+                return sr.HelperMethod(400, $"Your email has been confirmed already.", false);
             }
 
             if (!confirmationDetails.Token.Contains('+'))
@@ -239,8 +276,8 @@ namespace MindPlaceApi.Services
             }
 
             //set updated column
-            foundUser.UpdatedOn = DateTime.UtcNow;
-
+            //foundUser.UpdatedOn = DateTime.UtcNow;
+            //get referrals
             var userReferrals = foundUser.Referrals;
             //check if the user was referred...
             if (userReferrals.Any(ur => ur.ReferredUserId == foundUser.Id))
@@ -250,21 +287,47 @@ namespace MindPlaceApi.Services
                 //mark the referral process as completed.
                 referralInfo.CompletedOn = DateTime.UtcNow;
 
-                //get the referrer user...
+                //get the that referred this user...
                 var referrer = referralInfo.Referrer;
-                //credit the referre with 5 credits...
-                referrer.Wallet.Balance += 5;
-                //add a transaction record.
-                await _repositoryWrapper.Transaction.InsertAsync(new Transaction
+
+                if(referrer.Wallet != null)
                 {
-                    WalletId = referrer.Wallet.Id,
-                    Description = "Referral bonus credit for '" + foundUser.Email + "'",
-                    Type = TransactionType.CREDIT.ToString()
-                });
+                    //credit the referrer with 5 credits...
+                    referrer.Wallet.Balance += 5;
+                    await _repositoryWrapper.Transaction.InsertAsync(new Transaction
+                    {
+                        WalletId = referrer.Wallet.Id,
+                        Units = 5,
+                        Description = "Referral bonus credit for '" + foundUser.Email + "'",
+                        Type = TransactionType.CREDIT.ToString()
+                    });
+                }
+                else
+                {
+                    //open a new wallet for the referrer
+                    //credit the referrer with 5 credits...
+                    var wallet = new Wallet
+                    {
+                        Balance = 5,
+                        UserId = referrer.Id,
+                        Transactions = new Collection<Transaction>
+                        {
+                           new Transaction
+                            {
+                                Units = 5,
+                                Description = "Referral bonus credit for '" + foundUser.Email + "'",
+                                Type = TransactionType.CREDIT.ToString()
+                            }
+                        }
+                    };
+                    await _repositoryWrapper.Wallet.InsertAsync(wallet);
+                }
+                
+
                 //create Notification for the referrer.
                 await _repositoryWrapper.Notification.InsertAsync(new Notification
                 {
-                    CreatedForId = referrer.Wallet.Id,
+                    CreatedForId = referrer.Id,
                     Message = "Your have been credited with 5 units on your wallet, please check your transaction history for more detials.",
                     Type = NotificationType.WALLETTRANSACTION.ToString()
                 });
@@ -623,7 +686,7 @@ namespace MindPlaceApi.Services
             }
 
             //Attempt to send mail
-            await _emailService.SendMailToUserAsync(user, subject, message);
+            await _emailService.SendMailToUserAsync($"{user.FirstName} {user.LastName}", user.Email, subject, message);
 
             return true;
         }

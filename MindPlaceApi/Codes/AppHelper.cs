@@ -37,10 +37,5 @@ namespace MindPlaceApi.Codes
             PATIENT
         }
 
-        public enum NotificationType
-        {//name is self explanatory.
-            COMMENT,
-            SUBSCRIPTION
-        }
     }
 }

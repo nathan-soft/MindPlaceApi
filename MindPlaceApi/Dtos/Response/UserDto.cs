@@ -14,8 +14,6 @@ namespace MindPlaceApi.Dtos.Response
         public List<string> Roles { get; set; }
         public string UserName { get; set; }
         public DateTime DOB { get; set; }
-        public string Qualification { get; set; }
-        public string Employment { get; set; }
         //only for patients
         public string ReferralCode { get; set; }
         //only for patients

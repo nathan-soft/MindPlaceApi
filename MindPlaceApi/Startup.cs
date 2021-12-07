@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -95,6 +96,16 @@ namespace MindPlaceApi
                     In = ParameterLocation.Header,
                     Type = SecuritySchemeType.Http,
                     Scheme = "Bearer"
+                });
+
+                s.CustomOperationIds(e =>
+                {
+                    //var Id = $"{e.ActionDescriptor.RouteValues["controller"]}_{e.HttpMethod}";
+                    var controllerAction = (ControllerActionDescriptor)e.ActionDescriptor;
+
+                    //var Id = ControllerAction.ControllerName + ControllerAction.ActionName;
+
+                    return controllerAction.ActionName;
                 });
 
                 s.AddSecurityRequirement(new OpenApiSecurityRequirement

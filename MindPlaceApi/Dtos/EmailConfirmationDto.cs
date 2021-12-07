@@ -13,4 +13,10 @@ namespace MindPlaceApi.Dtos
         [Required]
         public string Token { get; set; }
     }
+
+    public class EmailTokenDto
+    {
+        [Required]
+        public string Username { get; set; }
+    }
 }

@@ -50,12 +50,12 @@ namespace MindPlaceApi.Services {
         {
             var sr = new ServiceResponse<TokenDto>();
             var user = await _userManager.FindByNameAsync(username);
-            if (!user.IsActive)
-            {
-                //enable the user.
-                user.IsActive = true;
-                await _userManager.UpdateAsync(user);
-            }
+            //if (!user.IsActive)
+            //{
+            //    //enable the user.
+            //    user.IsActive = true;
+            //    await _userManager.UpdateAsync(user);
+            //}
 
             var validPassword = await _userManager.CheckPasswordAsync(user, password);
             if (user == null || !validPassword)
@@ -63,20 +63,26 @@ namespace MindPlaceApi.Services {
                 //username does not exist.
                 return sr.HelperMethod(StatusCodes.Status422UnprocessableEntity, "Incorrect username or password", false);
             }
-            else
+
+            if (!user.EmailConfirmed)
             {
-                //create jwt token.
-                var tokenString = CreateJwtToken(user, out long expiration);
-                sr.Code = 200;
-                sr.Data = new TokenDto()
-                {
-                    access_token = tokenString,
-                    expiration = expiration.ToString()
-                };
-                sr.Message = "Login Success.";
-                sr.Success = true;
-                return sr;
+                //email address need to be confirmed.
+                return sr.HelperMethod(StatusCodes.Status422UnprocessableEntity, "You need to confirm your email address before you can login.", false);
             }
+
+
+            //create jwt token.
+            var tokenString = CreateJwtToken(user, out long expiration);
+            sr.Code = 200;
+            sr.Data = new TokenDto()
+            {
+                access_token = tokenString,
+                expiration = expiration.ToString()
+            };
+            sr.Message = "Login Success.";
+            sr.Success = true;
+            return sr;
+            
 
         }
 

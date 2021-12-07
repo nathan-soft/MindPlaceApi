@@ -278,7 +278,7 @@ namespace MindPlaceApi.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     Title = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Content = table.Column<string>(type: "nvarchar(max)", maxLength: 5000, nullable: false),
                     Type = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
@@ -296,7 +296,7 @@ namespace MindPlaceApi.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -380,7 +380,8 @@ namespace MindPlaceApi.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<int>(type: "int", nullable: true),
+                    ParentCommentId = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<int>(type: "int", nullable: false),
                     QuestionId = table.Column<int>(type: "int", nullable: false),
                     Content = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -394,7 +395,7 @@ namespace MindPlaceApi.Migrations
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.NoAction);
                     table.ForeignKey(
                         name: "FK_Comments_Questions_QuestionId",
                         column: x => x.QuestionId,
@@ -434,7 +435,9 @@ namespace MindPlaceApi.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     WalletId = table.Column<int>(type: "int", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Units = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -452,10 +455,10 @@ namespace MindPlaceApi.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { 1, "00eb2059-f693-47f6-b616-5c19ef69aee0", "Admin", "ADMIN" },
-                    { 2, "671a0a03-3ddf-40d3-94ac-5faf478b3af0", "Moderator", "MODERATOR" },
-                    { 3, "b3028f4c-643d-40fa-bdf4-96ec9f0e4f45", "Professional", "PROFESSIONAL" },
-                    { 4, "0022e33e-15ab-4cba-946f-faefcf57b907", "Patient", "PATIENT" }
+                    { 1, "8123a5ba-3ed3-4cb3-a2dc-477f0b0a756b", "Admin", "ADMIN" },
+                    { 2, "9a9e56c0-ac82-421d-a0af-04b09f633050", "Moderator", "MODERATOR" },
+                    { 3, "3ba77db8-857c-4b66-9f09-447774fa95ee", "Professional", "PROFESSIONAL" },
+                    { 4, "7fcf0d9d-4b2f-4069-bfeb-fa6a4f6efd93", "Patient", "PATIENT" }
                 });
 
             migrationBuilder.InsertData(
@@ -463,8 +466,8 @@ namespace MindPlaceApi.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedOn", "LastUpdatedBy", "Name", "UpdatedOn" },
                 values: new object[,]
                 {
-                    { 1, "admin@mindplace.com", new DateTime(2021, 10, 7, 12, 26, 4, 441, DateTimeKind.Utc).AddTicks(5760), null, "Kasina", new DateTime(2021, 10, 7, 12, 26, 4, 441, DateTimeKind.Utc).AddTicks(6136) },
-                    { 2, "admin@mindplace.com", new DateTime(2021, 10, 7, 12, 26, 4, 441, DateTimeKind.Utc).AddTicks(6415), null, "Sirius", new DateTime(2021, 10, 7, 12, 26, 4, 441, DateTimeKind.Utc).AddTicks(6419) }
+                    { 1, "admin@mindplace.com", new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(2588), null, "Kasina", new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3012) },
+                    { 2, "admin@mindplace.com", new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3353), null, "Sirius", new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3358) }
                 });
 
             migrationBuilder.CreateIndex(

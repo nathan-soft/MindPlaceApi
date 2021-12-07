@@ -21,13 +21,17 @@ namespace LifeLongApi.Controllers
         private readonly IUserService _userService;
         private readonly IRoleService _roleService;
         private readonly INotificationService _notificationService;
+        private readonly IQualificationService _qualificationService;
+        private readonly IWorkExperienceService _workExperienceService;
         private readonly IMapper _mapper;
 
-        public UsersController(IMapper mapper, IUserService userService, IRoleService roleService, INotificationService notificationService)
+        public UsersController(IMapper mapper, IUserService userService, IRoleService roleService, INotificationService notificationService, IQualificationService qualificationService, IWorkExperienceService workExperienceService)
         {
             _userService = userService;
             _roleService = roleService;
             _notificationService = notificationService;
+            _qualificationService = qualificationService;
+            _workExperienceService = workExperienceService;
             _mapper = mapper;
         }
 
@@ -136,6 +140,32 @@ namespace LifeLongApi.Controllers
 
         }
 
+        [HttpPatch("{username}/change-password")]
+        public async Task<ActionResult<string>> ChangePassword(string username, ChangePasswordRequest details)
+        {
+            try
+            {
+                var result = await _userService.ChangePassword(username, details);
+
+                if (result.Success)
+                {
+                    //return data.
+                    return Ok(result.Message);
+                }
+                else
+                {
+                    //error
+                    return Problem(result.Message, statusCode: result.Code);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                //log and return default custom error
+                return Problem(ex.Message, statusCode: 500);
+            }
+        }
+
 
 
 
@@ -192,24 +222,48 @@ namespace LifeLongApi.Controllers
             }
         }
 
-        [HttpPatch("{username}/change-password")]
-        public async Task<ActionResult<string>> ChangePassword(string username, ChangePasswordRequest details)
+        [HttpGet("{username}/qualifications")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<ActionResult<List<QualificationResponseDto>>> FetchUserQualificationsAsync(string username)
         {
             try
             {
-                var result = await _userService.ChangePassword(username, details);
-
-                if (result.Success)
+                var response = await _qualificationService.GetCurrentUserQualificationsAsync(username);
+                if (response.Success)
                 {
                     //return data.
-                    return Ok(result.Message);
+                    return Ok(response.Data);
                 }
                 else
                 {
-                    //error
-                    return Problem(result.Message, statusCode: result.Code);
+                    return Problem(response.Message, statusCode: response.Code);
                 }
+            }
+            catch (Exception ex)
+            {
+                //log and return default custom error
+                return Problem(ex.Message, statusCode: 500);
+            }
+        }
 
+        [HttpGet("{username}/work-experiences")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        public async Task<ActionResult<List<WorkExperienceResponseDto>>> FetchUserWorkExperiences(string username)
+        {
+            try
+            {
+                var response = await _workExperienceService.GetUserWorkExperiencesAsync(username);
+                if (response.Success)
+                {
+                    //return data.
+                    return Ok(response.Data);
+                }
+                else
+                {
+                    return Problem(response.Message, statusCode: response.Code);
+                }
             }
             catch (Exception ex)
             {

@@ -64,7 +64,7 @@ namespace MindPlaceApi.Services
             }
 
             sr.Code = 200;
-            sr.Data = _mapper.Map<List<CommentResponseDto>>(question.Comments);
+            sr.Data = _mapper.Map<List<CommentResponseDto>>(question.Comments.OrderByDescending(c => c.CreatedOn));
             sr.Success = true;
             return sr;
         }
@@ -110,23 +110,19 @@ namespace MindPlaceApi.Services
             var comment = _mapper.Map<Comment>(commentDetails);
             comment.QuestionId = questionId;
 
-            //check if it's not an anonymous comment
-            if (_httpContextAccessor.HttpContext.User.Identity.IsAuthenticated)
+            var username = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
+            //get userId from db.
+            var user = await _userManager.FindByNameAsync(username);
+            if (user != null)
             {
-                var username = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
-                //get userId from db.
-                var user = await _userManager.FindByNameAsync(username);
-                if (user != null)
-                {
-                    //assign the id of the user.
-                    comment.UserId = user.Id;
-                }
-                else
-                {
-                    //error
-                    //User session is prolly expired or something.
-                    return sr.HelperMethod(400, $"Unable to load user with username '{username}'", false);
-                }
+                //assign the id of the user.
+                comment.UserId = user.Id;
+            }
+            else
+            {
+                //error
+                //User session is prolly expired or something.
+                return sr.HelperMethod(400, $"Unable to load user with username '{username}'", false);
             }
 
             //add to db
@@ -135,24 +131,19 @@ namespace MindPlaceApi.Services
             await _repositoryWrapper.SaveChangesAsync();
 
 
-            //if the user that asked the question wasn't anonymous...
-            //and the authenticated user making the comment isn't the user that asked the question in the first place
-            if (question.UserId != null && question.UserId != comment.UserId)
+            //if the authenticated user making the comment isn't the user that asked the question in the first place
+            if (question.UserId != comment.UserId)
             {
-                //send notification to the user
-                var nameOfUser = "Someone";
-                if (comment.UserId != null)
-                {
-                    //name of authenticated commenter.
-                    nameOfUser = $"<b>{comment.User.FirstName} {comment.User.LastName}</b>";
-                }
-
+                //send notification to the user that asked the question.
+                //name of authenticated commenter.
+                var nameOfUser = $"<b>{comment.User.FirstName} {comment.User.LastName}</b>";
                 var message = $"{nameOfUser} commented on your question.";
+
                 //GET THE SITE DOMAIN
                 var host = _httpContextAccessor.HttpContext.Request.Host;
-                var url = $"{host}/api/questions/{questionId}/comments/{comment.Id}";
+                var url = $"{host}/api/questions/{questionId}";
 
-                _backgroundJobClient.Enqueue(() => _notificationService.NewNotificationAsync(comment.UserId, (int)question.UserId, message, url, NotificationType.COMMENT));
+                _backgroundJobClient.Enqueue(() => _notificationService.NewNotificationAsync(comment.UserId, question.UserId, message, url, NotificationType.COMMENT));
             }
 
             //return newly created resource.
@@ -184,9 +175,9 @@ namespace MindPlaceApi.Services
             //current user
             var currUser = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
             //The authenticated user that made the comment is the only user allowed to edit a comment
-            if (comment.User?.UserName != currUser)
+            if (comment.User.UserName != currUser)
             {
-                //trying to delete somebody else's question.
+                //trying to edit somebody else's question.
                 return sr.HelperMethod(403, "The action is forbidden", false);
             }
 
@@ -225,11 +216,11 @@ namespace MindPlaceApi.Services
             //current user
             var currUser = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
             //people allowed to delete a comment are:
-            //Admins,
-            //The user/patients that asked the question..(if the question wasn't asked by an anonymous user)
-            //And the authenticated user that made the comment.
-            if (comment.User?.UserName != currUser
-                            && comment.Question.User?.UserName != currUser
+            //The authenticated user that made the comment.
+            //The user/patient that asked the question..
+            //And Admins
+            if (comment.User.UserName != currUser
+                            && comment.Question.User.UserName != currUser
                             && (_httpContextAccessor.HttpContext.User.IsInRole("Patient")
                             || _httpContextAccessor.HttpContext.User.IsInRole("Professional")))
             {

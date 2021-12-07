@@ -17,7 +17,7 @@ namespace MindPlaceApi.Services
     {
         Task<ServiceResponse<QualificationResponseDto>> AddQualificationAsync(QualificationDto qualificationCreds);
         Task<ServiceResponse<string>> DeleteQualificationAsync(int qualificationId);
-        Task<ServiceResponse<List<QualificationResponseDto>>> GetCurrentUserQualificationsAsync();
+        Task<ServiceResponse<List<QualificationResponseDto>>> GetCurrentUserQualificationsAsync(string username);
         Task<ServiceResponse<QualificationResponseDto>> UpdateQualificationAsync(int qualificationId, QualificationDto qualificationCreds);
     }
 
@@ -40,11 +40,18 @@ namespace MindPlaceApi.Services
         }
 
 
-        public async Task<ServiceResponse<List<QualificationResponseDto>>> GetCurrentUserQualificationsAsync()
+        public async Task<ServiceResponse<List<QualificationResponseDto>>> GetCurrentUserQualificationsAsync(string username)
         {
             var sr = new ServiceResponse<List<QualificationResponseDto>>();
+            var currUser = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
+
+            if(currUser != username)
+            {
+                return sr.HelperMethod(403, "You're not allowed to read other people's qualifications.", false);
+            }
+
             //verify user exists
-            var foundUser = await _userManager.FindByNameAsync(_httpContextAccessor.HttpContext.GetUsernameOfCurrentUser());
+            var foundUser = await _userManager.FindByNameAsync(username);
             if (foundUser == null)
             {
                 return sr.HelperMethod(404, "User not found", false);

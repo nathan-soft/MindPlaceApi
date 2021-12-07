@@ -82,7 +82,7 @@ namespace MindPlaceApi.Controllers
 
         [AllowAnonymous]
         [HttpGet("{questionId}")]
-        public async Task<ActionResult<QuestionResponseDto>> GetQuestionAsync(int questionId)
+        public async Task<ActionResult<ForumQuestionResponseDto>> GetQuestionAsync(int questionId)
         {
             try
             {
@@ -106,15 +106,38 @@ namespace MindPlaceApi.Controllers
 
         }
 
-        //[AllowAnonymous]
-        //[HttpGet]
-        //public async Task<ActionResult<PaginatedResponse<QuestionResponseDto>> GetPaginatedQuestionAsync()
-        //{
-        //    throw new NotImplementedException();
-        //}
+        [AllowAnonymous]
+        [HttpGet("forum/{questionId}")]
+        public async Task<ActionResult<ForumPostResponseDto>> GetForumQuestionAsync(int questionId)
+        {
+            try
+            {
+                var result = await _questionService.GetForumQuestionAsync(questionId);
+                if (result.Success)
+                {
+                    //return data.
+                    return Ok(result.Data);
+                }
+                else
+                {
+                    //error
+                    return Problem(result.Message, statusCode: result.Code);
+                }
+            }
+            catch (Exception ex)
+            {
+                //log and return default custom error
+                return Problem(ex.Message, statusCode: 500);
+            }
+
+        }
 
         [Authorize(Roles = "Patient")]
         [HttpPost]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<QuestionResponseDto>> AddQuestionAsync(QuestionDto questionDetails)
         {
             try
@@ -140,7 +163,7 @@ namespace MindPlaceApi.Controllers
 
         }
 
-        [AllowAnonymous]
+        [Authorize(Roles = "Patient")]
         [HttpPost("forum")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -304,8 +327,11 @@ namespace MindPlaceApi.Controllers
             }
         }
 
-        [AllowAnonymous]
         [HttpPost("{questionId}/comments")]
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError, Type = typeof(ProblemDetails))]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<CommentResponseDto>> AddCommentAsync(int questionId, CommentDto commentDetails)
         {
             try
@@ -331,7 +357,6 @@ namespace MindPlaceApi.Controllers
 
         }
 
-        [Authorize(Roles = "Patient,Professional")]
         [HttpPut("{questionId}/comments/{commentId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

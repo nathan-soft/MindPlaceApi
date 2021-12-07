@@ -19,7 +19,7 @@ namespace MindPlaceApi.Services
     public interface IEmailService
     {
         Task SendBroadcastMailAsync(string subject, string message, IEnumerable<string> receivers, Guid key);
-        Task SendMailToUserAsync(AppUser user, string mailSubject, string message);
+        Task SendMailToUserAsync(string fullName, string userEmail, string mailSubject, string message);
         Task SendSubscriptionMailAsync(AppUser professional, AppUser patient);
         Task SendConfirmationMailAsync(AppUser user, string confirmationLink);
         Task SendTestMailAsync();
@@ -92,18 +92,18 @@ namespace MindPlaceApi.Services
             await SendMailAsync(email);
         }
 
-        public async Task SendMailToUserAsync(AppUser user, string mailSubject, string message)
+        public async Task SendMailToUserAsync(string fullName, string userEmail, string mailSubject, string message)
         {
             // create message
             var email = new MimeMessage();
             email.From.Add(new MailboxAddress("MindPlace", SMTPUser));
-            email.To.Add(new MailboxAddress($"{user.FirstName} {user.LastName}", user.Email));
+            email.To.Add(new MailboxAddress(fullName, userEmail));
 
             //CONSTRUCT THE MESSAGE BODY.
             string messageBody = "";
             messageBody += GetEmailHeader(mailSubject, email);
             messageBody += message;
-            messageBody += GetEmailFooter(user.Email);
+            messageBody += GetEmailFooter(userEmail);
 
             email.Body = new TextPart(TextFormat.Html) { Text = messageBody };
 

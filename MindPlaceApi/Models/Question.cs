@@ -9,7 +9,7 @@ namespace MindPlaceApi.Models
     public class Question : BaseEntity
     {
         public int Id { get; set; }
-        public int? UserId { get; set; }
+        public int UserId { get; set; }
         [Required, MaxLength(100)]
         public string Title { get; set; }
         [Required, MaxLength(5000)]
@@ -30,12 +30,13 @@ namespace MindPlaceApi.Models
     public class Comment : BaseEntity
     {
         public int Id { get; set; }
-        //...because it could be anonymous
-        public int? UserId { get; set; }
+        public int? ParentCommentId { get; set; }
+        public int UserId { get; set; }
         public int QuestionId { get; set; }
         [Required, MaxLength(200)]
         public string Content { get; set; }
 
+        //public virtual Comment ParentComment { get; set; }
         public virtual Question Question { get; set; }
         public virtual AppUser User { get; set; }
 

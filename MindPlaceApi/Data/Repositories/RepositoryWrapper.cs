@@ -16,6 +16,7 @@ namespace MindPlaceApi.Data.Repositories
         ITagRepository Tag { get; }
         ITransactionRepository Transaction { get; }
         IUserRepository User { get; }
+        IWalletRepository Wallet { get; }
         IWorkExperienceRepository WorkExperience { get; }
 
         /// <summary>
@@ -37,6 +38,7 @@ namespace MindPlaceApi.Data.Repositories
         private ITagRepository _tag;
         private ITransactionRepository _transaction;
         private IUserRepository _user;
+        private IWalletRepository _wallet;
         private IWorkExperienceRepository _workExperience;
 
         public ICommentRepository Comment
@@ -144,6 +146,18 @@ namespace MindPlaceApi.Data.Repositories
                     _transaction = new TransactionRepository(_context);
                 }
                 return _transaction;
+            }
+        }
+
+        public IWalletRepository Wallet
+        {
+            get
+            {
+                if (_wallet == null)
+                {
+                    _wallet = new WalletRepository(_context);
+                }
+                return _wallet;
             }
         }
 

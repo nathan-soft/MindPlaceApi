@@ -10,6 +10,7 @@ namespace MindPlaceApi.Models
     {
         public int Id { get; set; }
         public int WalletId { get; set; }
+        public int Units { get; set; }
         [Required, MaxLength(100)]
         public string Description { get; set; }
         [Required]

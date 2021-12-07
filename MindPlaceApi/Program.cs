@@ -19,22 +19,22 @@ namespace MindPlaceApi
         public static async Task Main(string[] args)
         {
             var host = CreateHostBuilder(args).Build();
-            using (var scope = host.Services.CreateScope())
-            {
-                var serviceProvider = scope.ServiceProvider;
-                try
-                {
-                    var userService = serviceProvider.GetRequiredService<IUserService>();
-                    var followService = serviceProvider.GetRequiredService<IFollowService>();
-                    var mapper = serviceProvider.GetRequiredService<IMapper>();
-                    var dbs = new DbSeeder(userService, followService);
-                    await dbs.SeedDataAsync();
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine(ex.Message);
-                }
-            }
+            //using (var scope = host.Services.CreateScope())
+            //{
+            //    var serviceProvider = scope.ServiceProvider;
+            //    try
+            //    {
+            //        var userService = serviceProvider.GetRequiredService<IUserService>();
+            //        var followService = serviceProvider.GetRequiredService<IFollowService>();
+            //        var mapper = serviceProvider.GetRequiredService<IMapper>();
+            //        var dbs = new DbSeeder(userService, followService);
+            //        await dbs.SeedDataAsync();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        Debug.WriteLine(ex.Message);
+            //    }
+            //}
             host.Run();
         }
 

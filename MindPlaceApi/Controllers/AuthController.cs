@@ -13,37 +13,40 @@ namespace MindPlaceApi.Controllers
 {
     [Produces("application/json")]
     [ApiController]
-    [Route ("api/[controller]")]
+    [Route("api/[controller]")]
     public class AuthController : ControllerBase {
         private readonly IUserService _userService;
         private readonly IAuthService _authService;
         private readonly IMapper _mapper;
         private readonly IBlobService _blobService;
 
-        public AuthController (IAuthService authService, IMapper mapper, IUserService userService, IBlobService blobService) 
+        private readonly IEmailService _emailService;
+
+        public AuthController(IAuthService authService, IMapper mapper, IUserService userService, IBlobService blobService, IEmailService emailService)
         {
             _authService = authService;
             _userService = userService;
             _mapper = mapper;
             _blobService = blobService;
+            _emailService = emailService;
         }
 
         [HttpPost("login")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<TokenDto>> Login (LoginDto loginCreds) {
-            var result = await _authService.Login (loginCreds.Username, loginCreds.Password);
+        public async Task<ActionResult<TokenDto>> Login(LoginDto loginCreds) {
+            var result = await _authService.Login(loginCreds.Username, loginCreds.Password);
             if (result.Success) {
-                    return Ok(result.Data);
+                return Ok(result.Data);
             } else {
                 //error occurred
-                return Problem(result.Message, statusCode:result.Code);
+                return Problem(result.Message, statusCode: result.Code);
             }
         }
 
         [HttpPost("register-user")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<ResponseMessageDto>> CreateUser (NewUserDto userInfo) {
+        public async Task<ActionResult<ResponseMessageDto>> CreateUser(NewUserDto userInfo) {
             try
             {
                 //try creating the user.
@@ -61,7 +64,7 @@ namespace MindPlaceApi.Controllers
             }
             catch (Exception ex)
             {
-                if(ex.Message.Contains("Username") && ex.Message.Contains("is already taken."))
+                if (ex.Message.Contains("Username") && ex.Message.Contains("is already taken."))
                 {
                     //constraint validation
                     return Problem("The username is already taken.", statusCode: 409);
@@ -71,36 +74,35 @@ namespace MindPlaceApi.Controllers
             }
         }
 
-        //[HttpPost("register-professional")]
-        //[ProducesResponseType(StatusCodes.Status200OK)]
-        //public async Task<ActionResult<string>> CreateProfessional(NewUserDto userInfo)
-        //{
-        //    try
-        //    {
-        //        //try creating the user.
-        //        var result = await _userService.CreateNewProfessional(userInfo);
-        //        if (result.Success)
-        //        {
-        //            //user was created successfully
-        //            return Ok(result.Message);
-        //        }
-        //        else
-        //        {
-        //            //error
-        //            return Problem(result.Message, statusCode: result.Code);
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        //set status code.
-        //        HttpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
-        //        //log and return default custom error
-        //        return Problem(detail: ex.Message, statusCode: 500);
-        //    }
-        //}
+        [HttpPost("send-email-token")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        //[ProducesDefaultResponseType(typeof(ProblemDetails))]
+        public async Task<ActionResult<string>> SendEmailToken(EmailTokenDto tokenDto)
+        {
+            try
+            {
+                //try creating the user.
+                var result = await _userService.SendConfirmationTokenAsync(tokenDto.Username);
+                if (result.Success)
+                {
+                    //user was created successfully
+                    return Ok(result.Data);
+                }
+                else
+                {
+                    //error
+                    return Problem(result.Message, statusCode: result.Code);
+                }
+            }
+            catch (Exception ex)
+            {
+                //log and return default custom error
+                return Problem(detail: ex.Message, statusCode: 500);
+            }
+        }
 
         //[HttpGet("Send_Mail")]
-        //public  ActionResult TestMail()
+        //public ActionResult TestMail()
         //{
         //    try
         //    {

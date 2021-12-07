@@ -10,7 +10,7 @@ using MindPlaceApi.Data;
 namespace MindPlaceApi.Migrations
 {
     [DbContext(typeof(IdentityAppContext))]
-    [Migration("20211007122605_InitialCreate")]
+    [Migration("20211026083139_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -139,28 +139,28 @@ namespace MindPlaceApi.Migrations
                         new
                         {
                             Id = 1,
-                            ConcurrencyStamp = "00eb2059-f693-47f6-b616-5c19ef69aee0",
+                            ConcurrencyStamp = "8123a5ba-3ed3-4cb3-a2dc-477f0b0a756b",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = 2,
-                            ConcurrencyStamp = "671a0a03-3ddf-40d3-94ac-5faf478b3af0",
+                            ConcurrencyStamp = "9a9e56c0-ac82-421d-a0af-04b09f633050",
                             Name = "Moderator",
                             NormalizedName = "MODERATOR"
                         },
                         new
                         {
                             Id = 3,
-                            ConcurrencyStamp = "b3028f4c-643d-40fa-bdf4-96ec9f0e4f45",
+                            ConcurrencyStamp = "3ba77db8-857c-4b66-9f09-447774fa95ee",
                             Name = "Professional",
                             NormalizedName = "PROFESSIONAL"
                         },
                         new
                         {
                             Id = 4,
-                            ConcurrencyStamp = "0022e33e-15ab-4cba-946f-faefcf57b907",
+                            ConcurrencyStamp = "7fcf0d9d-4b2f-4069-bfeb-fa6a4f6efd93",
                             Name = "Patient",
                             NormalizedName = "PATIENT"
                         });
@@ -314,13 +314,16 @@ namespace MindPlaceApi.Migrations
                     b.Property<DateTime>("CreatedOn")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("ParentCommentId")
+                        .HasColumnType("int");
+
                     b.Property<int>("QuestionId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -492,7 +495,7 @@ namespace MindPlaceApi.Migrations
                     b.Property<DateTime>("UpdatedOn")
                         .HasColumnType("datetime2");
 
-                    b.Property<int?>("UserId")
+                    b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.Property<int>("ViewCount")
@@ -583,17 +586,17 @@ namespace MindPlaceApi.Migrations
                         {
                             Id = 1,
                             CreatedBy = "admin@mindplace.com",
-                            CreatedOn = new DateTime(2021, 10, 7, 12, 26, 4, 441, DateTimeKind.Utc).AddTicks(5760),
+                            CreatedOn = new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(2588),
                             Name = "Kasina",
-                            UpdatedOn = new DateTime(2021, 10, 7, 12, 26, 4, 441, DateTimeKind.Utc).AddTicks(6136)
+                            UpdatedOn = new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3012)
                         },
                         new
                         {
                             Id = 2,
                             CreatedBy = "admin@mindplace.com",
-                            CreatedOn = new DateTime(2021, 10, 7, 12, 26, 4, 441, DateTimeKind.Utc).AddTicks(6415),
+                            CreatedOn = new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3353),
                             Name = "Sirius",
-                            UpdatedOn = new DateTime(2021, 10, 7, 12, 26, 4, 441, DateTimeKind.Utc).AddTicks(6419)
+                            UpdatedOn = new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3358)
                         });
                 });
 
@@ -605,7 +608,16 @@ namespace MindPlaceApi.Migrations
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Units")
+                        .HasColumnType("int");
 
                     b.Property<int>("WalletId")
                         .HasColumnType("int");
@@ -756,7 +768,9 @@ namespace MindPlaceApi.Migrations
 
                     b.HasOne("MindPlaceApi.Models.AppUser", "User")
                         .WithMany("Comments")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Question");
 
@@ -814,7 +828,9 @@ namespace MindPlaceApi.Migrations
                 {
                     b.HasOne("MindPlaceApi.Models.AppUser", "User")
                         .WithMany("Questions")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });

@@ -24,7 +24,8 @@ namespace MindPlaceApi.Models
     public enum NotificationType
     {
         APPOINTMENT,
-        SUBSCRIPTIONREQUEST,
+        COMMENT,
+        SUBSCRIPTION,
         WALLETTRANSACTION
     }
 }
