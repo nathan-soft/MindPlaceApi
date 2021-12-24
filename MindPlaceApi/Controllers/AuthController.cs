@@ -43,7 +43,7 @@ namespace MindPlaceApi.Controllers
             }
         }
 
-        [HttpPost("register-user")]
+        [HttpPost("register")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<ResponseMessageDto>> CreateUser(NewUserDto userInfo) {
@@ -74,19 +74,19 @@ namespace MindPlaceApi.Controllers
             }
         }
 
-        [HttpPost("send-email-token")]
+        [HttpPost("forgot-password")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        //[ProducesDefaultResponseType(typeof(ProblemDetails))]
-        public async Task<ActionResult<string>> SendEmailToken(EmailTokenDto tokenDto)
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
+        public async Task<ActionResult<ResponseMessageDto>> ForgotPasswordAsync(ForgotPasswordDto forgotPasswordDto)
         {
             try
             {
-                //try creating the user.
-                var result = await _userService.SendConfirmationTokenAsync(tokenDto.Username);
+                var result = await _userService.SendPasswordResetTokenAsync(forgotPasswordDto.Email);
                 if (result.Success)
                 {
-                    //user was created successfully
-                    return Ok(result.Data);
+                    //return data.
+                    return Ok(new ResponseMessageDto { Message = result.Data });
                 }
                 else
                 {
@@ -97,9 +97,78 @@ namespace MindPlaceApi.Controllers
             catch (Exception ex)
             {
                 //log and return default custom error
-                return Problem(detail: ex.Message, statusCode: 500);
+                return Problem(ex.Message, statusCode: 500);
             }
+
         }
+
+        [HttpPost("reset-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
+        public async Task<ActionResult<ResponseMessageDto>> ResetPasswordAsync(ResetPasswordDto userDetails)
+        {
+            try
+            {
+                var result = await _userService.ResetPassword(userDetails);
+                if (result.Success)
+                {
+                    //return data.
+                    return Ok(new ResponseMessageDto { Message = result.Data });
+                }
+                else
+                {
+                    //error
+                    return Problem(result.Message, statusCode: result.Code);
+                }
+            }
+            catch (Exception ex)
+            {
+                //log and return default custom error
+                return Problem(ex.Message, statusCode: 500);
+            }
+
+        }
+
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        //[HttpPost("send-email-token")]
+        //[ProducesResponseType(StatusCodes.Status200OK)]
+        ////[ProducesDefaultResponseType(typeof(ProblemDetails))]
+        //public async Task<ActionResult<string>> SendEmailToken(EmailTokenDto tokenDto)
+        //{
+        //    try
+        //    {
+        //        //try creating the user.
+        //        var result = await _userService.SendConfirmationTokenAsync(tokenDto.Username);
+        //        if (result.Success)
+        //        {
+        //            //user was created successfully
+        //            return Ok(result.Data);
+        //        }
+        //        else
+        //        {
+        //            //error
+        //            return Problem(result.Message, statusCode: result.Code);
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //log and return default custom error
+        //        return Problem(detail: ex.Message, statusCode: 500);
+        //    }
+        //}
 
         //[HttpGet("Send_Mail")]
         //public ActionResult TestMail()

@@ -37,6 +37,7 @@ namespace LifeLongApi.Controllers
 
         [HttpGet("{username}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<UserResponseDto>> GetUserAsync(string username)
         {
             try
@@ -63,6 +64,7 @@ namespace LifeLongApi.Controllers
 
         [HttpGet("professionals")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<List<UserResponseDto>>> GetProfessionalsAsync()
         {
             try
@@ -90,6 +92,7 @@ namespace LifeLongApi.Controllers
         [Authorize(Roles = "Patient")]
         [HttpGet("suggested-professionals")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<List<AbbrvUser>>> GetSuggestedProfessionalsAsync()
         {
             try
@@ -116,6 +119,8 @@ namespace LifeLongApi.Controllers
 
         [AllowAnonymous]
         [HttpPatch("confirm-email")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<string>> ConfirmUserEmailAsync(EmailConfirmationDto confirmationDetails)
         {
             try
@@ -141,6 +146,8 @@ namespace LifeLongApi.Controllers
         }
 
         [HttpPatch("{username}/change-password")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<string>> ChangePassword(string username, ChangePasswordRequest details)
         {
             try
@@ -166,11 +173,43 @@ namespace LifeLongApi.Controllers
             }
         }
 
+        [HttpPatch("{username}/change-profile-photo")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<ResponseMessageDto>> ChangeProfilePhoto(string username, IFormFile profilePhoto)
+        {
+            try
+            {
+                var result = await _userService.ChangeProfilePictureAsync(username, profilePhoto);
+
+                if (result.Success)
+                {
+                    //return data.
+                    return Ok(new ResponseMessageDto { Message = result.Data});
+                }
+                else
+                {
+                    //error
+                    return Problem(result.Message, statusCode: result.Code);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                //log and return default custom error
+                return Problem(ex.Message, statusCode: 500);
+            }
+        }
+
 
 
 
 
         [HttpGet("{username}/notifications")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<List<NotificationResponseDto>>> GetUserNotifications(string username)
         {
             try
@@ -197,11 +236,40 @@ namespace LifeLongApi.Controllers
         }
 
         [HttpGet("{username}/subscription-requests")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesDefaultResponseType(typeof(ProblemDetails))]
         public async Task<ActionResult<List<SubscriptionResponseDto>>> GetUserSubscriptionRequests(string username)
         {
             try
             {
                 var result = await _userService.GetUserSubscriptionRequestsAsync(username);
+
+                if (result.Success)
+                {
+                    //return data.
+                    return Ok(result.Data);
+                }
+                else
+                {
+                    //error
+                    return Problem(result.Message, statusCode: result.Code);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                //log and return default custom error
+                return Problem(ex.Message, statusCode: 500);
+            }
+        }
+
+        [Authorize(Roles = "Patient,Professional")]
+        [HttpGet("{username}/questions")]
+        public async Task<ActionResult<List<QuestionResponseDto>>> GetUserQuestionsAsync(string username)
+        {
+            try
+            {
+                var result = await _userService.GetUserQuestionsAsync(username);
 
                 if (result.Success)
                 {

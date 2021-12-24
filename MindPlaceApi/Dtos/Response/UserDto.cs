@@ -26,18 +26,12 @@ namespace MindPlaceApi.Dtos.Response
         public List<AbbrvUser> Followers { get; set; }
         public List<AbbrvUser> Following { get; set; }
 
-        //if the user  is a professional, this refers to the number of subscribed patients they have.
-        //if the user is a patient,  this refers to the number of professionals they've subscribed to.
-        //public int FriendsCount { get; set; }
-        //refers to questions answered for professionals.
-        //for patients, refers to total number of questions asked.
-        public List<QuestionResponseDto> Questions { get; set; }
-
     }
 
     public class AbbrvUser
     {
         public string FullName { get; set; }
         public string Username { get; set; }
+        public string ImageUrl { get; set; }
     }
 }

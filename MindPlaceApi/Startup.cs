@@ -161,8 +161,8 @@ namespace MindPlaceApi
                     ClockSkew = TimeSpan.Zero
                 };
             });
-            services.AddSingleton(x => new BlobServiceClient(Configuration.GetSection("AzureBlobStorageConnectionString").Value));
-
+            services.AddSingleton(x => new BlobServiceClient(Configuration.GetSection("Storage:ConnectionString").Value));
+            
             // Add Hangfire services.
             services.AddHangfire(c => c.UseSqlServerStorage(Configuration.GetConnectionString("DefaultConnec"),
                 new SqlServerStorageOptions

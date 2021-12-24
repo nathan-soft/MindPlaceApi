@@ -20,25 +20,21 @@ namespace MindPlaceApi.Codes
              .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.UserRoles.Select(r => r.Role.Name).ToList()))
              .ForMember(dest => dest.Followers, opt =>
              {
-                 opt.MapFrom(src => src.UserRoles.Any(r => r.Role.Name.Contains("Patient")) ? 
+                 opt.MapFrom(src => src.UserRoles.Any(r => r.Role.Name.Contains("Patient")) ?
                                                  src.RelationshipWithProfessionals
                                                     .Where(rwf => rwf.Status == FollowStatus.CONFIRMED.ToString())
-                                                    .Select(rwp => rwp.Professional).ToList() : 
+                                                    .Select(rwp => rwp.Professional).ToList() :
                                                     src.RelationshipWithPatients.Select(rwp => rwp.Patient).ToList());
              })
              .ForMember(dest => dest.Following, opt =>
              {
-                  opt.MapFrom(src => src.UserRoles.Any(r => r.Role.Name.Contains("Patient")) ? 
-                                                    src.RelationshipWithProfessionals.Select(rwp => rwp.Professional).ToList() : 
-                                                    src.RelationshipWithPatients.Where(rwf => rwf.Status == FollowStatus.CONFIRMED.ToString())
-                                                                                .Select(rwp => rwp.Patient)
-                                                                                .ToList());
-             })
-             .ForMember(dest => dest.Questions, opt => opt.MapFrom(src => src.UserRoles.Any(r => r.Role.Name.Contains("Patient")) ?
-                                                                       src.Questions.OrderByDescending(q => q.CreatedOn).ToList() :
-                                                                       src.Questions.Where(q => q.Comments.Any(c => c.UserId == src.Id)                                      || src.RelationshipWithPatients.Any(f => f.PatientId == q.UserId))
-                                                                                                  .OrderByDescending(q => q.CreatedOn)
-                                                                                                  .ToList()));
+                 opt.MapFrom(src => src.UserRoles.Any(r => r.Role.Name.Contains("Patient")) ?
+                                                   src.RelationshipWithProfessionals.Select(rwp => rwp.Professional).ToList() :
+                                                   src.RelationshipWithPatients.Where(rwf => rwf.Status == FollowStatus.CONFIRMED.ToString())
+                                                                               .Select(rwp => rwp.Patient)
+                                                                               .ToList());
+             });
+             
             CreateMap<QualificationDto, Qualification>();
             CreateMap<Qualification, QualificationResponseDto>();
             CreateMap<QuestionDto, Question>();
@@ -61,7 +57,8 @@ namespace MindPlaceApi.Codes
             CreateMap<Notification, NotificationResponseDto>()
                 .ForPath(dest => dest.Creator.Username, opt => opt.MapFrom(src => src.CreatedBy.UserName))
                 .ForPath(dest => dest.Creator.FullName,
-                           opt => opt.MapFrom(src => $"{src.CreatedBy.FirstName} { src.CreatedBy.LastName}"));
+                           opt => opt.MapFrom(src => $"{src.CreatedBy.FirstName} { src.CreatedBy.LastName}"))
+                .ForPath(dest => dest.Creator.ImageUrl, opt => opt.MapFrom(src => src.CreatedBy.ImageUrl));
             //.ForMember(dest => dest.CreatedOn, opt =>
             //{
             //    opt.MapFrom(src => TimeZoneInfo.ConvertTimeFromUtc(src.CreatedOn,

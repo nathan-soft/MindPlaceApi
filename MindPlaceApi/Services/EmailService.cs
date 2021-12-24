@@ -24,6 +24,7 @@ namespace MindPlaceApi.Services
         Task SendConfirmationMailAsync(AppUser user, string confirmationLink);
         Task SendTestMailAsync();
         Task SendNotificationMailAsync(string username, string userEmail, string fullName, string subject, string message);
+        Task SendPasswordResetMailAsync(string firstname, string lastname, string userEmail, string passwordResetLink);
     }
 
     public class EmailService : IEmailService
@@ -237,6 +238,43 @@ namespace MindPlaceApi.Services
             messageBody += "<p><b>MindsPlace</b> Support </p>";
             messageBody += $"<p>This link becomes invalid on <span style='color: red'>{DateTime.Now.AddHours(24).ToUniversalTime().ToString("dd-MM-yyyy hh:mm tt")} GMT</span></p>";
             messageBody += $"<p style='font-weight: bold;'>This message was sent to {user.Email}</p>";
+            messageBody += $"<p>© Copyright {DateTime.Today.Year} mindplace.com. All Rights Reserved.</p>";
+            messageBody += "</div>";
+            messageBody += "</div>";
+            messageBody += "</div>";
+
+            email.Body = new TextPart(TextFormat.Html) { Text = messageBody };
+
+            // send email
+            await SendMailAsync(email).ConfigureAwait(false);
+        }
+
+        public async Task SendPasswordResetMailAsync(string firstname, string lastname, string userEmail, string passwordResetLink)
+        {
+            // create message
+            var email = new MimeMessage();
+            email.From.Add(new MailboxAddress("MindsPlace", SMTPUser));
+            email.To.Add(new MailboxAddress($"{firstname} {lastname}", userEmail));
+            email.Subject = "Password Reset Token";
+
+            //CONSTRUCT THE MESSAGE BODY.
+            string messageBody = "";
+            messageBody += "<div>";
+            messageBody += "<div style='background-color: #f0eee7; padding: 50px 50px;'>";
+            messageBody += "<div style = 'margin: auto; width: 100px; height: 100px' >";
+            messageBody += "<img src='https://pbs.twimg.com/profile_images/1105583743392198658/qdMa06Oc_400x400.jpg' style='width: 100%; height: 100%;' />";
+            messageBody += " </div>";
+            messageBody += "<div style='background-color: white; text-align: center; margin-top: 5px; padding: 25px 0px; '>";
+            messageBody += "<p>Reset Password</p>";
+            messageBody += $"<p>Hello <span style='font-weight:bold'>{firstname}</span></p>";
+            messageBody += "<p>To proceed with your account recovery on Mindplace, Please click on the button below to reset your password</p> ";
+            messageBody += "<divstyle='margin: auto;'>";
+            messageBody += $"<a href='{passwordResetLink}' style='border-color: #e08e0b; background-color: #f39c12; border: 1px solid transparent; border-radius: 3px; padding: 10px; color: white; text-decoration: none;'>Reset Password</a>";
+            messageBody += "</div>";
+            messageBody += "<p>If you didnt request a password reset, you can ignore this email</p>";
+            messageBody += "<p><b>MindsPlace</b> Support </p>";
+            messageBody += $"<p>This link becomes invalid on <span style='color: red'>{DateTime.Now.AddHours(24).ToUniversalTime().ToString("dd-MM-yyyy hh:mm tt")} GMT</span></p>";
+            messageBody += $"<p style='font-weight: bold;'>This message was sent to {userEmail}</p>";
             messageBody += $"<p>© Copyright {DateTime.Today.Year} mindplace.com. All Rights Reserved.</p>";
             messageBody += "</div>";
             messageBody += "</div>";

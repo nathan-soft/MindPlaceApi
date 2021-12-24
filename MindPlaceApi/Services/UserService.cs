@@ -12,6 +12,7 @@ using MindPlaceApi.Models;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
@@ -33,11 +34,15 @@ namespace MindPlaceApi.Services
         Task<ServiceResponse<List<UserResponseDto>>> GetNonAdministrativeUsersAsync(string filterString);
         Task<ServiceResponse<UserResponseDto>> GetUserAsync(string username);
         Task<ServiceResponse<List<UserResponseDto>>> GetProfessionalsAsync();
-        Task<ServiceResponse<string>> SendConfirmationTokenAsync(string username);
+        Task<ServiceResponse<string>> SendEmailConfirmationTokenAsync(string username);
         //Task<ServiceResponse<string>> SendMailAsync(SendBroadcastMailDto mailInfo);
         Task<ServiceResponse<UserResponseDto>> UpdateUserAsync(string username, EditUserDto userCreds);
         Task<ServiceResponse<List<SubscriptionResponseDto>>> GetUserSubscriptionRequestsAsync(string username);
         Task<ServiceResponse<List<AbbrvUser>>> GetSuggestedProfessionalsAsync();
+        Task<ServiceResponse<List<QuestionResponseDto>>> GetUserQuestionsAsync(string username);
+        Task<ServiceResponse<string>> SendPasswordResetTokenAsync(string email);
+        Task<ServiceResponse<string>> ResetPassword(ResetPasswordDto userDetails);
+        Task<ServiceResponse<string>> ChangeProfilePictureAsync(string username, IFormFile profilePhoto);
     }
 
     public class UserService : IUserService
@@ -47,28 +52,35 @@ namespace MindPlaceApi.Services
 
         private readonly IRepositoryWrapper _repositoryWrapper;
 
+        private readonly IBlobService _blobService;
         private readonly IEmailService _emailService;
+
         private readonly IMapper _mapper;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
 
-        //private readonly IBackgroundJobClient _backgroundJobClient;
+        private readonly IBackgroundJobClient _backgroundJobClient;
         public UserService(UserManager<AppUser> userManager,
                            RoleManager<AppRole> roleManager,
                            IRepositoryWrapper repositoryWrapper,
                            IEmailService emailService,
+                           IBlobService blobService,
                            IMapper mapper,
                            IHttpContextAccessor httpContextAccessor,
+                           IBackgroundJobClient backgroundJobClient,
                            IConfiguration configuration)
         {
+            _emailService = emailService;
+            _blobService = blobService;
+
             _userManager = userManager;
             _roleManager = roleManager;
             _repositoryWrapper = repositoryWrapper;
-            _emailService = emailService;
+            
             _mapper = mapper;
             _httpContextAccessor = httpContextAccessor;
             _configuration = configuration;
-            //_backgroundJobClient = backgroundJobClient;
+            _backgroundJobClient = backgroundJobClient;
         }
         
         public async Task<ServiceResponse<UserResponseDto>> GetUserAsync(string username)
@@ -184,7 +196,7 @@ namespace MindPlaceApi.Services
             newUser.UpdatedOn = DateTime.UtcNow;
 
             //GET THE SITE DOMAIN
-            var host = _configuration.GetSection("DomainForConfirmationLink").Value;
+            var host = _configuration.GetSection("ClientDomainAddress").Value;
 
             if (roles.Contains("Patient"))
             {
@@ -225,7 +237,7 @@ namespace MindPlaceApi.Services
             }
         }
 
-        public async Task<ServiceResponse<string>> SendConfirmationTokenAsync(string username)
+        public async Task<ServiceResponse<string>> SendEmailConfirmationTokenAsync(string username)
         {
             var sr = new ServiceResponse<string>();
             var foundUser = await _userManager.FindByNameAsync(username);
@@ -244,8 +256,50 @@ namespace MindPlaceApi.Services
             //get confirmation token
             string confirmationToken = await _userManager.GenerateEmailConfirmationTokenAsync(foundUser);
             string encodedToken = WebUtility.UrlEncode(confirmationToken);
-
+            
+            //this is wrong, do not return the token
             sr.Data = encodedToken;
+            return sr;
+        }
+
+        public async Task<ServiceResponse<string>> SendPasswordResetTokenAsync(string email)
+        {
+            var sr = new ServiceResponse<string>();
+            var errMsg = "There was an error while resetting your password.";
+
+            var foundUser = await _userManager.FindByEmailAsync(email);
+            if (foundUser == null)
+            {
+                //user does not exist.
+                // Don't reveal that the user does not exist or is not confirmed
+                return sr.HelperMethod(400, errMsg, false);
+            }
+
+            var isEmailConfirmed = await _userManager.IsEmailConfirmedAsync(foundUser);
+
+            if (!isEmailConfirmed)
+            {
+                //user does not exist.
+                // Don't reveal that the user does not exist or is not confirmed
+                return sr.HelperMethod(400, errMsg, false);
+            }
+
+
+            //GET THE SITE DOMAIN
+            var host = _configuration.GetSection("ClientDomainAddress").Value;
+
+            //get confirmation token
+            string confirmationToken = await _userManager.GeneratePasswordResetTokenAsync(foundUser);
+            //url encode token.
+            string confirmationTokenEncoded = WebUtility.UrlEncode(confirmationToken);
+
+            //get confirmation link
+            string passwordResetLink = $"{host}/public/ResetPassword?userId={foundUser.UserName}&token={confirmationTokenEncoded}";
+
+            //send confirmation mail
+            await _emailService.SendPasswordResetMailAsync(foundUser.FirstName, foundUser.LastName, foundUser.Email, passwordResetLink);
+
+            sr.Data = "Password reset link has been sent to your email address.";
             return sr;
         }
 
@@ -287,7 +341,7 @@ namespace MindPlaceApi.Services
                 //mark the referral process as completed.
                 referralInfo.CompletedOn = DateTime.UtcNow;
 
-                //get the that referred this user...
+                //get the user(patient) that referred this user...
                 var referrer = referralInfo.Referrer;
 
                 if(referrer.Wallet != null)
@@ -343,6 +397,45 @@ namespace MindPlaceApi.Services
 
         }
 
+        public async Task<ServiceResponse<string>> ResetPassword(ResetPasswordDto userDetails)
+        {
+            var sr = new ServiceResponse<string>();
+
+            var user = await _userManager.FindByNameAsync(userDetails.Username);
+
+            if(user == null)
+            {
+                //user does not exist.
+                // Don't reveal that the user does not exist.
+                return sr.HelperMethod(400, "There was an error while resetting your password", false);
+            }
+
+            //set updated column
+            user.UpdatedOn = DateTime.UtcNow;
+
+            if (!userDetails.Token.Contains('+'))
+            {
+                //decode the token as it's still url encoded;
+                userDetails.Token = WebUtility.UrlDecode(userDetails.Token);
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, userDetails.Token, userDetails.Password);
+
+            if (!result.Succeeded)
+            {
+                var message = string.Empty;
+                foreach (var error in result.Errors)
+                {
+                    message += $"{error.Description} ";
+                }
+
+                return sr.HelperMethod(400, message, false);
+            }
+
+            sr.Data = "Password reset successful!";
+            return sr;
+        }
+
         public async Task<ServiceResponse<string>> ChangePassword(string username, ChangePasswordRequest passwordRequest)
         {
             var sr = new ServiceResponse<string>();
@@ -361,7 +454,7 @@ namespace MindPlaceApi.Services
 
             if (!result.Succeeded)
             {
-                if(result.Errors.Any(err => err.Description.Contains("Incorrect password.")))
+                if (result.Errors.Any(err => err.Description.Contains("Incorrect password.")))
                 {
                     return sr.HelperMethod(400, "The 'Old Password' you entered is invalid.", false);
                 }
@@ -370,11 +463,65 @@ namespace MindPlaceApi.Services
                     var message = "New password must be between 6 to 100 characters long, consisting of at least 1 upper-case, 1 digit and 1 non-alphanumeric character";
                     return sr.HelperMethod(400, message, false);
                 }
-                
+
             }
 
             return sr.HelperMethod(200, "Password change successful.", true);
         }
+
+        public async Task<ServiceResponse<string>> ChangeProfilePictureAsync(string username, IFormFile profilePhoto)
+        {
+            var sr = new ServiceResponse<string>();
+            //VALIDATIONS
+            //validate uploaded Image
+
+            var imgValidationResult = ValidateImage(profilePhoto);
+            if (imgValidationResult != "Valid")
+            {
+                return sr.HelperMethod(400, imgValidationResult, false);
+            }
+
+            //create random name
+            var newFileName = GetUniqueFileName(profilePhoto.FileName);
+
+            //get user
+            var currUser = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
+            var user = await _userManager.FindByNameAsync(currUser);
+
+            if (user == null)
+            {
+                return sr.HelperMethod(401, "You need to be authenticated to perform this action.", false);
+            }
+
+            if (user.UserName != username)
+            {
+                return sr.HelperMethod(403, "The action is forbidden.", false);
+            }
+
+            //get container name
+            var containerName = _configuration.GetSection("Storage:ContainerName").Value;
+
+            //delete previous profile photo if any
+            if (!string.IsNullOrWhiteSpace(user.ImageUrl))
+            {
+                var blobName = user.ImageUrl.Split('/')[4];
+                _backgroundJobClient.Enqueue(() => _blobService.DeleteBlobAsync(containerName, blobName));
+            }
+
+            //upload image to azure storage.
+            var imageUrl = await _blobService.UploadFileBlobAsync(containerName,
+                                                                  profilePhoto.OpenReadStream(),
+                                                                  newFileName);
+
+            //Update user.
+            user.ImageUrl = imageUrl;
+            user.UpdatedOn = DateTime.UtcNow;
+            await _repositoryWrapper.SaveChangesAsync();
+
+            sr.Data = "Image Upload was Successful.";
+            return sr;
+        }
+
 
         /// <summary>
         /// Gets susbscription requests for a user.
@@ -411,7 +558,8 @@ namespace MindPlaceApi.Services
                     User = new AbbrvUser
                     {
                         FullName = $"{sr.Professional.FirstName} {sr.Professional.LastName}",
-                        Username = sr.Professional.UserName
+                        Username = sr.Professional.UserName,
+                        ImageUrl = sr.Professional.ImageUrl
                     }
                 }).ToList();
             }
@@ -428,7 +576,8 @@ namespace MindPlaceApi.Services
                     User = new AbbrvUser
                     {
                         FullName = $"{sr.Patient.FirstName} {sr.Patient.LastName}",
-                        Username = sr.Patient.UserName
+                        Username = sr.Patient.UserName,
+                        ImageUrl = sr.Patient.ImageUrl
                     }
                 }).ToList();
             }
@@ -439,6 +588,41 @@ namespace MindPlaceApi.Services
             return sr;
         }
 
+        public async Task<ServiceResponse<List<QuestionResponseDto>>> GetUserQuestionsAsync(string username)
+        {
+            var sr = new ServiceResponse<List<QuestionResponseDto>>();
+
+            var foundUser = await _userManager.FindByNameAsync(username);
+
+            if (foundUser == null)
+            {
+                sr.HelperMethod(404, $"Unable to load user with username '{username}'", false);
+            }
+
+            List<Question> question = new List<Question>();
+
+            //get question from db;
+            if (foundUser.UserRoles.Any(r => r.Role.Name == "Patient"))
+            {
+                question = await _repositoryWrapper.Question.GetPatientQuestions(foundUser.Id)
+                                                            .Include(q => q.User)
+                                                            .OrderByDescending(q => q.UpdatedOn)
+                                                            .ToListAsync();
+            }
+            else
+            {
+                question = await _repositoryWrapper.Question.GetQuestionsForProfessional(foundUser.Id)
+                                                            .Include(q => q.User)
+                                                            .OrderByDescending(q => q)
+                                                            .ToListAsync();
+            }
+
+            sr.Data = _mapper.Map<List<QuestionResponseDto>>(question);
+            sr.Code = 200;
+            sr.Success = true;
+            return sr;
+        }
+
 
 
         private static long ConvertToTimestamp(DateTime value)
@@ -446,6 +630,52 @@ namespace MindPlaceApi.Services
             DateTime unixStart = DateTime.SpecifyKind(new DateTime(1970, 1, 1), DateTimeKind.Utc);
             long epoch = (long)Math.Floor((value.ToUniversalTime() - unixStart).TotalSeconds);
             return epoch;
+        }
+
+        private bool ImageGreaterThan2Mb(long imgSize)
+        {
+            //1 Kb = 1024 Byte
+            //1 Mb = 1024 Kb
+            //1 Mb = 1024x1024 Byte
+            //1 Mb = 1 048 576 Byte
+
+            if (imgSize > (1048576 * 2))
+                return true;
+            else
+                return false;
+        }
+
+        private string ValidateImage(IFormFile uploadedImage)
+        {
+            //valid extensions.
+            string[] permittedExtensions = { ".jpg", ".jpeg", ".png" };
+
+            var ext = Path.GetExtension(uploadedImage.FileName).ToLowerInvariant();
+            //check valid extensions.
+            if (!permittedExtensions.Contains(ext))
+            {
+                return "Only accepting '.jpeg, '.jpg' or '.png' images.";
+            }
+            //check content type and others...
+            if (!uploadedImage.IsImage())
+            {
+                return "Please upload an image.";
+            }
+            //check image size.
+            if (ImageGreaterThan2Mb(uploadedImage.Length))
+            {
+                return "Maximum allowed file size is 2MB.";
+            }
+            return "Valid";
+        }
+
+        private string GetUniqueFileName(string fileName)
+        {
+            fileName = Path.GetFileName(fileName);
+            return Path.GetFileNameWithoutExtension(fileName)
+                      + "_"
+                      + Guid.NewGuid().ToString().Substring(0, 4)
+                      + Path.GetExtension(fileName);
         }
 
 

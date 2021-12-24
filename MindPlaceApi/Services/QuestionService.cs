@@ -254,28 +254,28 @@ namespace MindPlaceApi.Services
             }
 
             //validate tags
-            string error = "";
-            var tags = new List<Tag>();
-            foreach(var tagName in questionDetails.Tags){
-                var tag = _repositoryWrapper.Tag.GetByName(tagName);
-                if (tag == null) {
-                    //tag don't exist.
-                    error = $"The tag '{tagName}' does not exist.";
-                    break;
-                }
+            //string error = "";
+            //var tags = new List<Tag>();
+            //foreach(var tagName in questionDetails.Tags){
+            //    var tag = _repositoryWrapper.Tag.GetByName(tagName);
+            //    if (tag == null) {
+            //        //tag don't exist.
+            //        error = $"The tag '{tagName}' does not exist.";
+            //        break;
+            //    }
 
-                //add to list...
-                tags.Add(tag);
-            }
+            //    //add to list...
+            //    tags.Add(tag);
+            //}
 
-            //return error if exist.
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                return sr.HelperMethod(400, error, false);
-            }
+            ////return error if exist.
+            //if (!string.IsNullOrWhiteSpace(error))
+            //{
+            //    return sr.HelperMethod(400, error, false);
+            //}
 
             //add tags to questions.
-            question.QuestionTags = tags.Select(t => new QuestionTag { TagId = t.Id }).ToList();
+            //question.QuestionTags = tags.Select(t => new QuestionTag { TagId = t.Id }).ToList();
 
             //save to database.
             await _repositoryWrapper.Question.InsertAsync(question);
@@ -342,48 +342,48 @@ namespace MindPlaceApi.Services
             }
 
             //validate tags
-            string error = "";
-            var updatedTags = new List<Tag>();
-            //get question old tags...
-            var oldTags = _repositoryWrapper.QuestionTag.GetQuestionTags(question.Id);
-            foreach (var tagName in questionDetails.Tags)
-            {
-                //compare old tags with new ones...
-                //check if "tagName" is part of old tags
-                if (!oldTags.Any(t => t.Name == tagName)) {
-                    //not in old tags
-                    //fetch tag from db
-                    var tag = _repositoryWrapper.Tag.GetByName(tagName);
-                    if (tag == null)
-                    {
-                        //tag don't exist.
-                        error = $"The tag '{tagName}' does not exist.";
-                        break;
-                    }
+            //string error = "";
+            //var updatedTags = new List<Tag>();
+            ////get question old tags...
+            //var oldTags = _repositoryWrapper.QuestionTag.GetQuestionTags(question.Id);
+            //foreach (var tagName in questionDetails.Tags)
+            //{
+            //    //compare old tags with new ones...
+            //    //check if "tagName" is part of old tags
+            //    if (!oldTags.Any(t => t.Name == tagName)) {
+            //        //not in old tags
+            //        //fetch tag from db
+            //        var tag = _repositoryWrapper.Tag.GetByName(tagName);
+            //        if (tag == null)
+            //        {
+            //            //tag don't exist.
+            //            error = $"The tag '{tagName}' does not exist.";
+            //            break;
+            //        }
 
-                    //add new tag to list...
-                    updatedTags.Add(tag);
-                }
-                else
-                {
-                    //updated tag can be found in old tags..
-                    //add to updated list
-                    updatedTags.Add(oldTags.Where(t => t.Name == tagName).FirstOrDefault());
-                }
-            }
+            //        //add new tag to list...
+            //        updatedTags.Add(tag);
+            //    }
+            //    else
+            //    {
+            //        //updated tag can be found in old tags..
+            //        //add to updated list
+            //        updatedTags.Add(oldTags.Where(t => t.Name == tagName).FirstOrDefault());
+            //    }
+            //}
 
             //return error if exist.
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                return sr.HelperMethod(400, error, false);
-            }
+            //if (!string.IsNullOrWhiteSpace(error))
+            //{
+            //    return sr.HelperMethod(400, error, false);
+            //}
             //delete old tags.
-            _repositoryWrapper.QuestionTag.DeleteRange(oldTags.Select(t => new QuestionTag { QuestionId = questionId, TagId = t.Id }));
+            //_repositoryWrapper.QuestionTag.DeleteRange(oldTags.Select(t => new QuestionTag { QuestionId = questionId, TagId = t.Id }));
 
             //update question
             question.Title = questionDetails.Title;
             question.Content = questionDetails.Content;
-            question.QuestionTags.AddRange(updatedTags.Select(t => new QuestionTag { TagId = t.Id }));
+            //question.QuestionTags.AddRange(updatedTags.Select(t => new QuestionTag { TagId = t.Id }));
 
             //save to database.
             _repositoryWrapper.Question.Update(question);

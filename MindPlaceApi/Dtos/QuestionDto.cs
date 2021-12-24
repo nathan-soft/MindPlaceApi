@@ -16,9 +16,9 @@ namespace MindPlaceApi.Dtos
 
     public class ForumQuestionDto : QuestionDto
     {
-        [MinLength(1, ErrorMessage = "At least one tag is required.")]
-        [MaxLength(3, ErrorMessage = "Maximum number of tags allowed is 3")]
-        public List<string> Tags { get; set; }
+        //[MinLength(1, ErrorMessage = "At least one tag is required.")]
+        //[MaxLength(3, ErrorMessage = "Maximum number of tags allowed is 3")]
+        //public List<string> Tags { get; set; }
     }
 
     public class CommentDto
