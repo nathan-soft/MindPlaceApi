@@ -25,6 +25,18 @@ namespace MindPlaceApi.Services
         Task<ServiceResponse<ForumPostResponseDto>> GetForumQuestionAsync(int questionId);
         Task<ServiceResponse<ForumQuestionResponseDto>> GetQuestionAsync(int questionId);
         Task<ServiceResponse<List<QuestionResponseDto>>> GetQuestionsAsync();
+        /// <summary>
+        /// Likes a question
+        /// </summary>
+        /// <param name="questionId">The question to like.</param>
+        /// <returns>>A task that resolve to a ServiceResponse class which will contain information about the asynchronous operation.</returns>
+        Task<ServiceResponse<string>> LikeQuestionAsync(int questionId);
+        /// <summary>
+        /// Unlikes a question.
+        /// </summary>
+        /// <param name="questionId">The question to unlike.</param>
+        /// <returns>A task that resolve to a ServiceResponse class which will contain information about the asynchronous operation.</returns>
+        Task<ServiceResponse<string>> UnlikeQuestionAsync(int questionId);
     }
 
     public class QuestionService : IQuestionService
@@ -115,7 +127,7 @@ namespace MindPlaceApi.Services
                 query = query.Where(q => q.CreatedOn.Year == DateTime.UtcNow.Year && 
                                     q.CreatedOn.Month == DateTime.UtcNow.Month)
                                 .OrderByDescending(q => q.Comments.Count)
-                                .ThenByDescending(q => q.ViewCount);
+                                .ThenByDescending(q => q.Likes.Count);
             }
             else if(filterBy == "popular this week"){
                 var startOfWeek = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek);
@@ -123,7 +135,7 @@ namespace MindPlaceApi.Services
 
                 query = query.Where(q => q.CreatedOn >= startOfWeek && q.CreatedOn <= endOfWeek)
                                 .OrderByDescending(q => q.Comments.Count)
-                                .ThenByDescending(q => q.ViewCount);
+                                .ThenByDescending(q => q.Likes.Count);
             }
             else if (filterBy == "trending")
             {
@@ -139,6 +151,7 @@ namespace MindPlaceApi.Services
             }
             else
             {
+                //gets latest question(s)
                 query = query.OrderByDescending(q => q.UpdatedOn);
             }
 
@@ -396,6 +409,67 @@ namespace MindPlaceApi.Services
             return sr;
         }
 
+        public async Task<ServiceResponse<string>> LikeQuestionAsync(int questionId)
+        {
+            var sr = new ServiceResponse<string>();
+
+            //get question from db;
+            var question = await _repositoryWrapper.Question.GetByIdAsync(questionId);
+
+            if (question == null)
+            {
+                return sr.HelperMethod(404, $"Unable to load the question.", false);
+            }
+
+            var username = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
+            var foundUser = await _userManager.FindByNameAsync(username);
+            if (foundUser == null)
+            {
+                return sr.HelperMethod(404, $"Unable to load the current user.", false);
+            }
+
+            //save to database.
+            await _repositoryWrapper.QuestionLike.InsertAsync(new QuestionLike {UserId = foundUser.Id, QuestionId = questionId });
+            await _repositoryWrapper.SaveChangesAsync();
+
+            sr.Data = "The like operation was successful.";
+            return sr;
+        }
+
+        public async Task<ServiceResponse<string>> UnlikeQuestionAsync(int questionId)
+        {
+            var sr = new ServiceResponse<string>();
+
+            //get question from db;
+            var question = await _repositoryWrapper.Question.GetByIdAsync(questionId);
+
+            if (question == null)
+            {
+                return sr.HelperMethod(404, $"Unable to load the question.", false);
+            }
+
+            var username = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
+            var foundUser = await _userManager.FindByNameAsync(username);
+            if (foundUser == null)
+            {
+                return sr.HelperMethod(404, $"Unable to load the current user.", false);
+            }
+
+            //get the question like record.
+            var likedQuestion = question.Likes.Where(ql => ql.UserId == foundUser.Id).SingleOrDefault();
+
+            if (likedQuestion != null)
+            {
+                //unlike
+                _repositoryWrapper.QuestionLike.Delete(likedQuestion);
+                await _repositoryWrapper.SaveChangesAsync();
+            }
+
+            //success
+            sr.Data = "You've unliked the question.";
+            return sr;
+        }
+
         public async Task<ServiceResponse<string>> DeleteQuestionAsync(int questionId)
         {
             var sr = new ServiceResponse<string>();
@@ -409,7 +483,7 @@ namespace MindPlaceApi.Services
             }
 
             //check if username matches.
-            if (question.User?.UserName != _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser())
+            if (question.User.UserName != _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser())
             {
                 //trying to delete somebody else's question.
                 return sr.HelperMethod(403, "The action is forbidden.", false);

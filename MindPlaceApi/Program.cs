@@ -21,13 +21,13 @@ namespace MindPlaceApi
             var host = CreateHostBuilder(args).Build();
             //using (var scope = host.Services.CreateScope())
             //{
-            //    var serviceProvider = scope.ServiceProvider;
+            //    var serviceprovider = scope.ServiceProvider;
             //    try
             //    {
-            //        var userService = serviceProvider.GetRequiredService<IUserService>();
-            //        var followService = serviceProvider.GetRequiredService<IFollowService>();
-            //        var mapper = serviceProvider.GetRequiredService<IMapper>();
-            //        var dbs = new DbSeeder(userService, followService);
+            //        var userservice = serviceprovider.GetRequiredService<IUserService>();
+            //        var followservice = serviceprovider.GetRequiredService<IFollowService>();
+            //        var mapper = serviceprovider.GetRequiredService<IMapper>();
+            //        var dbs = new DbSeeder(userservice, followservice);
             //        await dbs.SeedDataAsync();
             //    }
             //    catch (Exception ex)

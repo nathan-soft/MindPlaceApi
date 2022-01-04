@@ -40,13 +40,16 @@ namespace MindPlaceApi.Codes
             CreateMap<QuestionDto, Question>();
             CreateMap<Question, QuestionResponseDto>()
                 .ForMember(dest => dest.User, opt => opt.Condition(src => src.User != null))
-                .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Comments.Count));
+                .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Comments.Count))
+                .ForMember(dest => dest.NoOfLikes, opt => opt.MapFrom(src => src.Likes.Count));
             CreateMap<Question, ForumQuestionResponseDto>()
                 .ForMember(dest => dest.User, opt => opt.Condition(src => src.User != null))
                 .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Comments.Count))
+                .ForMember(dest => dest.NoOfLikes, opt => opt.MapFrom(src => src.Likes.Count))
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.QuestionTags.Select(t => t.Tag.Name).ToList()));
             CreateMap<Question, ForumPostResponseDto>()
                 .ForMember(dest => dest.CommentCount, opt => opt.MapFrom(src => src.Comments.Count))
+                .ForMember(dest => dest.NoOfLikes, opt => opt.MapFrom(src => src.Likes.Count))
                 .ForMember(dest => dest.Tags, opt => opt.MapFrom(src => src.QuestionTags.Select(t => t.Tag.Name).ToList()))
                 .ForMember(dest => dest.TopComments, opt => opt.MapFrom(src => src.Comments.OrderByDescending(c => c.CreatedOn).Take(10).ToList()));
             CreateMap<CommentDto, Comment>();

@@ -10,7 +10,7 @@ using MindPlaceApi.Data;
 namespace MindPlaceApi.Migrations
 {
     [DbContext(typeof(IdentityAppContext))]
-    [Migration("20211026083139_InitialCreate")]
+    [Migration("20220104110056_InitialCreate")]
     partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -139,28 +139,28 @@ namespace MindPlaceApi.Migrations
                         new
                         {
                             Id = 1,
-                            ConcurrencyStamp = "8123a5ba-3ed3-4cb3-a2dc-477f0b0a756b",
+                            ConcurrencyStamp = "653bde6b-dc4b-417d-b521-42334be240a0",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = 2,
-                            ConcurrencyStamp = "9a9e56c0-ac82-421d-a0af-04b09f633050",
+                            ConcurrencyStamp = "b1d2eb03-9663-44af-9fd1-649c1fe46553",
                             Name = "Moderator",
                             NormalizedName = "MODERATOR"
                         },
                         new
                         {
                             Id = 3,
-                            ConcurrencyStamp = "3ba77db8-857c-4b66-9f09-447774fa95ee",
+                            ConcurrencyStamp = "875bcd3c-648f-4fcb-b8ce-cb450e312dbc",
                             Name = "Professional",
                             NormalizedName = "PROFESSIONAL"
                         },
                         new
                         {
                             Id = 4,
-                            ConcurrencyStamp = "7fcf0d9d-4b2f-4069-bfeb-fa6a4f6efd93",
+                            ConcurrencyStamp = "6063b604-3439-460e-8946-e7dce20805a9",
                             Name = "Patient",
                             NormalizedName = "PATIENT"
                         });
@@ -508,6 +508,35 @@ namespace MindPlaceApi.Migrations
                     b.ToTable("Questions");
                 });
 
+            modelBuilder.Entity("MindPlaceApi.Models.QuestionLike", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<DateTime>("CreatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("QuestionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("QuestionId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("QuestionLikes");
+                });
+
             modelBuilder.Entity("MindPlaceApi.Models.QuestionTag", b =>
                 {
                     b.Property<int>("QuestionId")
@@ -586,17 +615,17 @@ namespace MindPlaceApi.Migrations
                         {
                             Id = 1,
                             CreatedBy = "admin@mindplace.com",
-                            CreatedOn = new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(2588),
+                            CreatedOn = new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(4047),
                             Name = "Kasina",
-                            UpdatedOn = new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3012)
+                            UpdatedOn = new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(4545)
                         },
                         new
                         {
                             Id = 2,
                             CreatedBy = "admin@mindplace.com",
-                            CreatedOn = new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3353),
+                            CreatedOn = new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(5048),
                             Name = "Sirius",
-                            UpdatedOn = new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3358)
+                            UpdatedOn = new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(5062)
                         });
                 });
 
@@ -835,6 +864,25 @@ namespace MindPlaceApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MindPlaceApi.Models.QuestionLike", b =>
+                {
+                    b.HasOne("MindPlaceApi.Models.Question", "Question")
+                        .WithMany("Likes")
+                        .HasForeignKey("QuestionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MindPlaceApi.Models.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Question");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MindPlaceApi.Models.QuestionTag", b =>
                 {
                     b.HasOne("MindPlaceApi.Models.Question", "Question")
@@ -939,6 +987,8 @@ namespace MindPlaceApi.Migrations
             modelBuilder.Entity("MindPlaceApi.Models.Question", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Likes");
 
                     b.Navigation("QuestionTags");
                 });

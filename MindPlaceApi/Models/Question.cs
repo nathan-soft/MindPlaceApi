@@ -24,6 +24,7 @@ namespace MindPlaceApi.Models
 
         public virtual AppUser User { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
+        public virtual List<QuestionLike> Likes { get; set; }
         public virtual List<QuestionTag> QuestionTags { get; set; }
     }
 
@@ -40,6 +41,15 @@ namespace MindPlaceApi.Models
         public virtual Question Question { get; set; }
         public virtual AppUser User { get; set; }
 
+    }
+
+    public class QuestionLike : BaseEntity
+    {
+        public int Id { get; set; }
+        public int QuestionId { get; set; }
+        public int UserId { get; set; }
+        public virtual Question Question { get; set; }
+        public virtual AppUser User { get; set; }
     }
 
     public class QuestionTag{

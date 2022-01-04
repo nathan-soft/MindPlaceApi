@@ -401,7 +401,35 @@ namespace MindPlaceApi.Migrations
                         column: x => x.QuestionId,
                         principalTable: "Questions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.NoAction);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuestionLikes",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuestionId = table.Column<int>(type: "int", nullable: false),
+                    UserId = table.Column<int>(type: "int", nullable: false),
+                    CreatedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedOn = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuestionLikes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QuestionLikes_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
+                    table.ForeignKey(
+                        name: "FK_QuestionLikes_Questions_QuestionId",
+                        column: x => x.QuestionId,
+                        principalTable: "Questions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.NoAction);
                 });
 
             migrationBuilder.CreateTable(
@@ -455,10 +483,10 @@ namespace MindPlaceApi.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { 1, "8123a5ba-3ed3-4cb3-a2dc-477f0b0a756b", "Admin", "ADMIN" },
-                    { 2, "9a9e56c0-ac82-421d-a0af-04b09f633050", "Moderator", "MODERATOR" },
-                    { 3, "3ba77db8-857c-4b66-9f09-447774fa95ee", "Professional", "PROFESSIONAL" },
-                    { 4, "7fcf0d9d-4b2f-4069-bfeb-fa6a4f6efd93", "Patient", "PATIENT" }
+                    { 1, "653bde6b-dc4b-417d-b521-42334be240a0", "Admin", "ADMIN" },
+                    { 2, "b1d2eb03-9663-44af-9fd1-649c1fe46553", "Moderator", "MODERATOR" },
+                    { 3, "875bcd3c-648f-4fcb-b8ce-cb450e312dbc", "Professional", "PROFESSIONAL" },
+                    { 4, "6063b604-3439-460e-8946-e7dce20805a9", "Patient", "PATIENT" }
                 });
 
             migrationBuilder.InsertData(
@@ -466,8 +494,8 @@ namespace MindPlaceApi.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedOn", "LastUpdatedBy", "Name", "UpdatedOn" },
                 values: new object[,]
                 {
-                    { 1, "admin@mindplace.com", new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(2588), null, "Kasina", new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3012) },
-                    { 2, "admin@mindplace.com", new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3353), null, "Sirius", new DateTime(2021, 10, 26, 8, 31, 38, 505, DateTimeKind.Utc).AddTicks(3358) }
+                    { 1, "admin@mindplace.com", new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(4047), null, "Kasina", new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(4545) },
+                    { 2, "admin@mindplace.com", new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(5048), null, "Sirius", new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(5062) }
                 });
 
             migrationBuilder.CreateIndex(
@@ -559,6 +587,17 @@ namespace MindPlaceApi.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_QuestionLikes_QuestionId_UserId",
+                table: "QuestionLikes",
+                columns: new[] { "QuestionId", "UserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuestionLikes_UserId",
+                table: "QuestionLikes",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Questions_UserId",
                 table: "Questions",
                 column: "UserId");
@@ -625,6 +664,9 @@ namespace MindPlaceApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "Qualifications");
+
+            migrationBuilder.DropTable(
+                name: "QuestionLikes");
 
             migrationBuilder.DropTable(
                 name: "QuestionTags");

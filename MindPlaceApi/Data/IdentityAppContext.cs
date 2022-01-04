@@ -168,6 +168,9 @@ namespace MindPlaceApi.Data {
                 );
             });
 
+            modelBuilder.Entity<QuestionLike>()
+                        .HasIndex(sc => new { sc.QuestionId, sc.UserId })
+                        .IsUnique();
             modelBuilder.Entity<QuestionTag>().HasKey(sc => new { sc.QuestionId, sc.TagId });
 
             modelBuilder.Entity<WorkExperience>()
@@ -180,6 +183,7 @@ namespace MindPlaceApi.Data {
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Qualification> Qualifications { get; set; }
         public DbSet<Question> Questions { get; set; }
+        public DbSet<QuestionLike> QuestionLikes { get; set; }
         public DbSet<QuestionTag> QuestionTags { get; set; }
         public DbSet<Referral> Referrals { get; set; }
         public DbSet<Tag> Tags { get; set; }

@@ -12,6 +12,7 @@ namespace MindPlaceApi.Data.Repositories
         INotificationRepository Notification { get; }
         IQualificationRepository Qualification { get; }
         IQuestionRepository Question { get; }
+        IQuestionLikeRepository QuestionLike { get; }
         IQuestionTagRepository QuestionTag { get; }
         ITagRepository Tag { get; }
         ITransactionRepository Transaction { get; }
@@ -34,6 +35,7 @@ namespace MindPlaceApi.Data.Repositories
         private INotificationRepository _notification;
         private IQualificationRepository _qualification;
         private IQuestionRepository _question;
+        private IQuestionLikeRepository _questionLike;
         private IQuestionTagRepository _questionTag;
         private ITagRepository _tag;
         private ITransactionRepository _transaction;
@@ -98,6 +100,18 @@ namespace MindPlaceApi.Data.Repositories
                     _question = new QuestionRepository(_context);
                 }
                 return _question;
+            }
+        }
+
+        public IQuestionLikeRepository QuestionLike
+        {
+            get
+            {
+                if (_questionLike == null)
+                {
+                    _questionLike = new QuestionLikeRepository(_context);
+                }
+                return _questionLike;
             }
         }
 

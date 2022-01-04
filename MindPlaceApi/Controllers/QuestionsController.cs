@@ -252,6 +252,65 @@ namespace MindPlaceApi.Controllers
 
         }
 
+        [HttpPut("{questionId}/likes")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ResponseMessageDto>> LikeQuestionAsync(int questionId)
+        {
+            try
+            {
+                var result = await _questionService.LikeQuestionAsync(questionId);
+                if (result.Success)
+                {
+                    //return data.
+                    return Ok(new ResponseMessageDto { Message = result.Data });
+                }
+                else
+                {
+                    //error
+                    return Problem(result.Message, statusCode: result.Code);
+                }
+            }
+            catch (Exception ex)
+            {
+                //if (ex.Message.Contains("Username") && ex.Message.Contains("is already taken."))
+                //{
+                //    //constraint validation
+                //    return Problem("The username is already taken.", statusCode: 409);
+                //}
+                //log and return default custom error
+                return Problem(ex.Message, statusCode: 500);
+            }
+
+        }
+
+        [HttpDelete("{questionId}/likes")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ResponseMessageDto>> UnlikeQuestionAsync(int questionId)
+        {
+            try
+            {
+                var result = await _questionService.UnlikeQuestionAsync(questionId);
+                if (result.Success)
+                {
+                    //return data.
+                    return Ok(new ResponseMessageDto { Message = result.Data });
+                }
+                else
+                {
+                    //error
+                    return Problem(result.Message, statusCode: result.Code);
+                }
+            }
+            catch (Exception ex)
+            {
+                //log and return default custom error
+                return Problem(ex.Message, statusCode: 500);
+            }
+
+        }
+
         [Authorize(Roles = "Patient,Admin,Moderator")]
         [HttpDelete("{questionId}")]
         public async Task<ActionResult<ResponseMessageDto>> DeleteQuestionAsync(int questionId)

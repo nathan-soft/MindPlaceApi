@@ -14,6 +14,7 @@ namespace MindPlaceApi.Dtos.Response
         public string Content { get; set; }
         public DateTime CreatedOn { get; set; }
         public int CommentCount { get; set; }
+        public int NoOfLikes { get; set; }
     }
 
     public class ForumQuestionResponseDto : QuestionResponseDto

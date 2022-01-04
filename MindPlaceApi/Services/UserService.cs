@@ -469,20 +469,27 @@ namespace MindPlaceApi.Services
             return sr.HelperMethod(200, "Password change successful.", true);
         }
 
-        public async Task<ServiceResponse<string>> ChangeProfilePictureAsync(string username, IFormFile profilePhoto)
+
+        /// <summary>
+        /// Replaces the profile picture of the user.
+        /// </summary>
+        /// <param name="username">The username of the user whoose picture wants to be changed.</param>
+        /// <param name="profilePicture">A jpg or png file.</param>
+        /// <returns>The url string for the uploaded picture.</returns>
+        public async Task<ServiceResponse<string>> ChangeProfilePictureAsync(string username, IFormFile profilePicture)
         {
             var sr = new ServiceResponse<string>();
             //VALIDATIONS
             //validate uploaded Image
 
-            var imgValidationResult = ValidateImage(profilePhoto);
+            var imgValidationResult = ValidateImage(profilePicture);
             if (imgValidationResult != "Valid")
             {
                 return sr.HelperMethod(400, imgValidationResult, false);
             }
 
             //create random name
-            var newFileName = GetUniqueFileName(profilePhoto.FileName);
+            var newFileName = GetUniqueFileName(profilePicture.FileName);
 
             //get user
             var currUser = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
@@ -510,7 +517,7 @@ namespace MindPlaceApi.Services
 
             //upload image to azure storage.
             var imageUrl = await _blobService.UploadFileBlobAsync(containerName,
-                                                                  profilePhoto.OpenReadStream(),
+                                                                  profilePicture.OpenReadStream(),
                                                                   newFileName);
 
             //Update user.
@@ -518,7 +525,7 @@ namespace MindPlaceApi.Services
             user.UpdatedOn = DateTime.UtcNow;
             await _repositoryWrapper.SaveChangesAsync();
 
-            sr.Data = "Image Upload was Successful.";
+            sr.Data = imageUrl;
             return sr;
         }
 
