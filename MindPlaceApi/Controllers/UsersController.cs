@@ -187,7 +187,7 @@ namespace LifeLongApi.Controllers
                 if (result.Success)
                 {
                     //return data.
-                    return Ok(new ResponseMessageDto { Message = result.Data});
+                    return Ok(new ProfilePictureDto { ImageUrl = result.Data});
                 }
                 else
                 {
