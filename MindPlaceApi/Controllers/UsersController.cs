@@ -178,7 +178,7 @@ namespace LifeLongApi.Controllers
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ResponseMessageDto>> ChangeProfilePhoto(string username, IFormFile profilePhoto)
+        public async Task<ActionResult<ProfilePictureDto>> ChangeProfilePhoto(string username, IFormFile profilePhoto)
         {
             try
             {
