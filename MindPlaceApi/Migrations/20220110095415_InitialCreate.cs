@@ -211,7 +211,7 @@ namespace MindPlaceApi.Migrations
                         column: x => x.ProfessionalId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -237,7 +237,7 @@ namespace MindPlaceApi.Migrations
                         column: x => x.CreatedById,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Notifications_AspNetUsers_CreatedForId",
                         column: x => x.CreatedForId,
@@ -323,7 +323,7 @@ namespace MindPlaceApi.Migrations
                         column: x => x.ReferrerId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -401,7 +401,7 @@ namespace MindPlaceApi.Migrations
                         column: x => x.QuestionId,
                         principalTable: "Questions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -429,7 +429,7 @@ namespace MindPlaceApi.Migrations
                         column: x => x.QuestionId,
                         principalTable: "Questions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.NoAction);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -483,10 +483,10 @@ namespace MindPlaceApi.Migrations
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
                 values: new object[,]
                 {
-                    { 1, "653bde6b-dc4b-417d-b521-42334be240a0", "Admin", "ADMIN" },
-                    { 2, "b1d2eb03-9663-44af-9fd1-649c1fe46553", "Moderator", "MODERATOR" },
-                    { 3, "875bcd3c-648f-4fcb-b8ce-cb450e312dbc", "Professional", "PROFESSIONAL" },
-                    { 4, "6063b604-3439-460e-8946-e7dce20805a9", "Patient", "PATIENT" }
+                    { 1, "e8708c03-131f-4297-942a-3d828a14850a", "Admin", "ADMIN" },
+                    { 2, "10e31abe-a433-4ca2-8491-7cd9ce63fb42", "Moderator", "MODERATOR" },
+                    { 3, "9ed1fd31-2af3-4837-9755-9b6ff9876fc1", "Professional", "PROFESSIONAL" },
+                    { 4, "b3c57b05-d997-479b-9f63-00f9338ee7c5", "Patient", "PATIENT" }
                 });
 
             migrationBuilder.InsertData(
@@ -494,8 +494,8 @@ namespace MindPlaceApi.Migrations
                 columns: new[] { "Id", "CreatedBy", "CreatedOn", "LastUpdatedBy", "Name", "UpdatedOn" },
                 values: new object[,]
                 {
-                    { 1, "admin@mindplace.com", new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(4047), null, "Kasina", new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(4545) },
-                    { 2, "admin@mindplace.com", new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(5048), null, "Sirius", new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(5062) }
+                    { 1, "admin@mindplace.com", new DateTime(2022, 1, 10, 9, 54, 14, 317, DateTimeKind.Utc).AddTicks(806), null, "Kasina", new DateTime(2022, 1, 10, 9, 54, 14, 317, DateTimeKind.Utc).AddTicks(1486) },
+                    { 2, "admin@mindplace.com", new DateTime(2022, 1, 10, 9, 54, 14, 317, DateTimeKind.Utc).AddTicks(2382), null, "Sirius", new DateTime(2022, 1, 10, 9, 54, 14, 317, DateTimeKind.Utc).AddTicks(2404) }
                 });
 
             migrationBuilder.CreateIndex(

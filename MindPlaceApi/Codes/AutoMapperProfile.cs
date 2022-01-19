@@ -61,6 +61,7 @@ namespace MindPlaceApi.Codes
                 .ForPath(dest => dest.Creator.Username, opt => opt.MapFrom(src => src.CreatedBy.UserName))
                 .ForPath(dest => dest.Creator.FullName,
                            opt => opt.MapFrom(src => $"{src.CreatedBy.FirstName} { src.CreatedBy.LastName}"))
+                .ForPath(dest => dest.Creator.Gender, opt => opt.MapFrom(src => src.CreatedBy.Gender))
                 .ForPath(dest => dest.Creator.ImageUrl, opt => opt.MapFrom(src => src.CreatedBy.ImageUrl));
             //.ForMember(dest => dest.CreatedOn, opt =>
             //{

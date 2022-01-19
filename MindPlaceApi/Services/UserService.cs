@@ -565,6 +565,7 @@ namespace MindPlaceApi.Services
                     User = new AbbrvUser
                     {
                         FullName = $"{sr.Professional.FirstName} {sr.Professional.LastName}",
+                        Gender = sr.Professional.Gender,
                         Username = sr.Professional.UserName,
                         ImageUrl = sr.Professional.ImageUrl
                     }
@@ -583,6 +584,7 @@ namespace MindPlaceApi.Services
                     User = new AbbrvUser
                     {
                         FullName = $"{sr.Patient.FirstName} {sr.Patient.LastName}",
+                        Gender = sr.Patient.Gender,
                         Username = sr.Patient.UserName,
                         ImageUrl = sr.Patient.ImageUrl
                     }

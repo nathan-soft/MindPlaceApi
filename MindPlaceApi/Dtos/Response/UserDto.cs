@@ -31,7 +31,9 @@ namespace MindPlaceApi.Dtos.Response
     public class AbbrvUser
     {
         public string FullName { get; set; }
-        public string Username { get; set; }
+        public string Gender { get; set; }
         public string ImageUrl { get; set; }
+        public string Username { get; set; }
+        
     }
 }

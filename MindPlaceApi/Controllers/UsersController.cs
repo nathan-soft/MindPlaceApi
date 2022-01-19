@@ -175,7 +175,7 @@ namespace LifeLongApi.Controllers
 
         [HttpPatch("{username}/change-profile-photo")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<ProfilePictureDto>> ChangeProfilePhoto(string username, IFormFile profilePhoto)

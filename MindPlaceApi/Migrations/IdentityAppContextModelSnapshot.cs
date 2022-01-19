@@ -137,28 +137,28 @@ namespace MindPlaceApi.Migrations
                         new
                         {
                             Id = 1,
-                            ConcurrencyStamp = "653bde6b-dc4b-417d-b521-42334be240a0",
+                            ConcurrencyStamp = "e8708c03-131f-4297-942a-3d828a14850a",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
                         },
                         new
                         {
                             Id = 2,
-                            ConcurrencyStamp = "b1d2eb03-9663-44af-9fd1-649c1fe46553",
+                            ConcurrencyStamp = "10e31abe-a433-4ca2-8491-7cd9ce63fb42",
                             Name = "Moderator",
                             NormalizedName = "MODERATOR"
                         },
                         new
                         {
                             Id = 3,
-                            ConcurrencyStamp = "875bcd3c-648f-4fcb-b8ce-cb450e312dbc",
+                            ConcurrencyStamp = "9ed1fd31-2af3-4837-9755-9b6ff9876fc1",
                             Name = "Professional",
                             NormalizedName = "PROFESSIONAL"
                         },
                         new
                         {
                             Id = 4,
-                            ConcurrencyStamp = "6063b604-3439-460e-8946-e7dce20805a9",
+                            ConcurrencyStamp = "b3c57b05-d997-479b-9f63-00f9338ee7c5",
                             Name = "Patient",
                             NormalizedName = "PATIENT"
                         });
@@ -613,17 +613,17 @@ namespace MindPlaceApi.Migrations
                         {
                             Id = 1,
                             CreatedBy = "admin@mindplace.com",
-                            CreatedOn = new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(4047),
+                            CreatedOn = new DateTime(2022, 1, 10, 9, 54, 14, 317, DateTimeKind.Utc).AddTicks(806),
                             Name = "Kasina",
-                            UpdatedOn = new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(4545)
+                            UpdatedOn = new DateTime(2022, 1, 10, 9, 54, 14, 317, DateTimeKind.Utc).AddTicks(1486)
                         },
                         new
                         {
                             Id = 2,
                             CreatedBy = "admin@mindplace.com",
-                            CreatedOn = new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(5048),
+                            CreatedOn = new DateTime(2022, 1, 10, 9, 54, 14, 317, DateTimeKind.Utc).AddTicks(2382),
                             Name = "Sirius",
-                            UpdatedOn = new DateTime(2022, 1, 4, 11, 0, 55, 30, DateTimeKind.Utc).AddTicks(5062)
+                            UpdatedOn = new DateTime(2022, 1, 10, 9, 54, 14, 317, DateTimeKind.Utc).AddTicks(2404)
                         });
                 });
 
