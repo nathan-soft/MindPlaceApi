@@ -47,19 +47,13 @@ namespace MindPlaceApi.Services
         public async Task<ServiceResponse<List<WorkExperienceResponseDto>>> GetUserWorkExperiencesAsync(string username)
         {
             var sr = new ServiceResponse<List<WorkExperienceResponseDto>>();
-            var currUser = _httpContextAccessor.HttpContext.GetUsernameOfCurrentUser();
-
-            if(currUser != username)
-            {
-                return sr.HelperMethod(403, "You're not allowed to read people's work experiences.", false);
-            }
-
+            
             //get user
             var foundUser = await _userManager.FindByNameAsync(username);
             if (foundUser == null)
             {
                 //user does not exist.
-                return sr.HelperMethod(404, "user not found.", false);
+                return sr.HelperMethod(404, $"Unable to find user with username '{username}'.", false);
             }
 
             var userWorkExperiences = await _repositoryWrapper.WorkExperience.GetAllForUserAsync(foundUser.Id);

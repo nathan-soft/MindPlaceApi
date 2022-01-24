@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -134,18 +135,31 @@ namespace MindPlaceApi
                     OnChallenge = context => {
                         context.HandleResponse();
                         var code = StatusCodes.Status401Unauthorized;
-                        var response = new { Code = code.ToString(), Message = "Unauthorized access" };
+
+                        var res = new ProblemDetails();
+                        res.Status = code;
+                        res.Title = "Unauthorized access";
+                        res.Type = "https://httpstatuses.com/401";
+                        res.Detail = "Invalid or expired access token.";
+
                         context.Response.StatusCode = code;
                         context.HttpContext.Response.Headers.Append("www-authenticate", "Bearer");
-                        return context.Response.WriteAsync(JsonConvert.SerializeObject(response));
+
+                        return context.Response.WriteAsync(JsonConvert.SerializeObject(res));
                     },
                     OnForbidden = context =>
                     {
                         var code = StatusCodes.Status403Forbidden;
-                        var response = new { Code = code.ToString(), Message = "You do not have the permission to access the resource." };
+
+                        var res = new ProblemDetails();
+                        res.Status = code;
+                        res.Title = "Forbidden request";
+                        res.Type = "https://httpstatuses.com/403";
+                        res.Detail = "You do not have the permission to access the resource.";
+
                         context.Response.StatusCode = code;
-                        context.HttpContext.Response.Headers.Append("www-authenticate", "Bearer");
-                        return context.Response.WriteAsync(JsonConvert.SerializeObject(response));
+
+                        return context.Response.WriteAsync(JsonConvert.SerializeObject(res));
                     }
                 };
                 options.TokenValidationParameters = new TokenValidationParameters

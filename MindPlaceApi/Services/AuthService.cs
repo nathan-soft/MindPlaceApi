@@ -114,7 +114,7 @@ namespace MindPlaceApi.Services {
                 _config.GetSection("jwt").GetSection("Issuer").Value,
                 _config.GetSection("jwt").GetSection("Audience").Value,
                 claims,
-                expires: DateTime.UtcNow.AddMinutes(60),
+                expires: DateTime.UtcNow.AddMinutes(90),
                 signingCredentials: creds
             );
 

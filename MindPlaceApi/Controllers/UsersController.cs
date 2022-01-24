@@ -203,10 +203,6 @@ namespace LifeLongApi.Controllers
             }
         }
 
-
-
-
-
         [HttpGet("{username}/notifications")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesDefaultResponseType(typeof(ProblemDetails))]
@@ -297,7 +293,7 @@ namespace LifeLongApi.Controllers
         {
             try
             {
-                var response = await _qualificationService.GetCurrentUserQualificationsAsync(username);
+                var response = await _qualificationService.GetUserQualificationsAsync(username);
                 if (response.Success)
                 {
                     //return data.
